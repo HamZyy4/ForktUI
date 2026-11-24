@@ -1,17 +1,15 @@
 --[[
-     _      ___         ____  ______
-    | | /| / (_)__  ___/ / / / /  _/
-    | |/ |/ / / _ \/ _  / /_/ // /  
-    |__/|__/_/_//_/\_,_/\____/___/
-    
-    v1.6.66  |  2026-10-07  |  Roblox UI Library for scripts
-    
-    To view the source code, see the `src/` folder on the official GitHub repository.
-    
-    Author: sukitovone
-    Github: https://github.com/HamZyy4/ForktUI
-    Discord: 
-    License: MIT
+  ______          __    __  __  __
+ / __/ /____ ____/ /__ / /_/ / / /
+/ _// __/ -_) __/  '_// __/ /_/ /
+/_/  \\__/\\__/_/ /_/\\_\\__/\\____/
+
+  ForktUI v1.6.66-forktui.2 | 2026-11-24
+  A modular, responsive graphite interface toolkit for Roblox client experiences, maintained by sukitovone.
+
+  Open source repository: https://github.com/HamZyy4/ForktUI
+  License: MIT
+  Maintained by sukitovone; third-party notices and license terms remain in LICENSE.
 ]]
 
 type ConfigType__DARKLUA_TYPE_a={
@@ -24460,268 +24458,352 @@ return{
 
 
 
-local b=(cloneref or clonereference or function(b)
-return b
+
+local b="https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/"
+
+local function isExecutor()
+return type(request)=="function"
+or type(request)=="table"
+or type(http_request)=="function"
+or(type(syn)=="table"and type(syn.request)=="function")
+end
+
+local function getSource(d)
+local e=type(request)=="function"and request
+or type(http_request)=="function"and http_request
+or(type(syn)=="table"and type(syn.request)=="function"and syn.request)
+
+if e then
+local f,g=pcall(e,{Url=d,Method="GET"})
+if f and type(g)=="table"and type(g.Body)=="string"then
+return g.Body
+end
+end
+
+local f,g=pcall(function()
+return game:HttpGet(d)
 end)
-
-b(game:GetService"RunService")
-local d=b(game:GetService"HttpService")
-local e=b(game:GetService"ReplicatedStorage")
-
-local function IsExploit()
-return request and true or false
+if f and type(g)=="string"then
+return g
 end
 
-local function Get(f)
-if IsExploit()then
-return game:HttpGet(f)
-else
-local g,h=pcall(function()
-return d:GetAsync(f)
-end)
-if g then
-return h
-else
-return e:WaitForChild("Request",9999):InvokeServer{Url=f}
+warn("[ForktUI Icons] HTTP request failed:",g)
+return nil
 end
+
+local function executeSource(d)
+if type(d)~="string"or type(loadstring)~="function"then
+return nil
+end
+
+local e,f=loadstring(d)
+if not e then
+error(f or"Icon pack compilation failed")
+end
+return e()
+end
+
+local function loadRemotePack(d)
+local e=getSource(b..d.."/dist/Icons.lua")
+if not e then
+return nil
+end
+
+local f,g=pcall(executeSource,e)
+if f and type(g)=="table"then
+return g
+end
+if not f then
+warn("[ForktUI Icons] Could not load '"..d.."':",g)
+end
+return nil
+end
+
+local function loadPack(d,e)
+if isExecutor()then
+local f=loadRemotePack(d)
+if f then
+return f
 end
 end
 
-local function Loadstring(f)
-if not IsExploit()and e:WaitForChild("Loadstring",9999)then
-return function()
-return e:WaitForChild("Loadstring",9999):InvokeServer(f)
-end
-else
-return loadstring(f)
-end
+
+local f,g=pcall(e)
+if f and type(g)=="table"then
+return g
 end
 
-local f={
+warn("[ForktUI Icons] Pack '"..d.."' is unavailable:",g)
+return{Icons={},Spritesheets={}}
+end
+
+local d={
 IconsType="lucide",
-
 New=nil,
 IconThemeTag=nil,
-
-Icons={
-lucide=IsExploit()and Loadstring(
-Get"https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/lucide/dist/Icons.lua"
-)()or a.load'b',
-solar=IsExploit()and Loadstring(
-Get"https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/solar/dist/Icons.lua"
-)()or a.load'c',
-craft=IsExploit()and Loadstring(
-Get"https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/craft/dist/Icons.lua"
-)()or a.load'd',
-geist=IsExploit()and Loadstring(
-Get"https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/geist/dist/Icons.lua"
-)()or a.load'e',
-sfsymbols=IsExploit()and Loadstring(
-Get"https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/sfsymbols/dist/Icons.lua"
-)()or a.load'f',
-gravity=IsExploit()and Loadstring(
-Get"https://raw.githubusercontent.com/HamZyy4/Icons/refs/heads/main/gravity/dist/Icons.lua"
-)()or a.load'g',
-},
-}
-
-local function parseIconString(g)
-if type(g)=="string"then
-local h=g:find":"
-if h then
-local i=g:sub(1,h-1)
-local j=g:sub(h+1)
-return i,j
-end
-end
-return nil,g
-end
-
-function f.AddIcons(g,h)
-if type(g)~="string"or type(h)~="table"then
-error"AddIcons: packName must be string, iconsData must be table"
-return
-end
-
-if not f.Icons[g]then
-f.Icons[g]={
 Icons={},
-Spritesheets={},
 }
+
+
+
+local e={
+lucide=function()return a.load'b'end,
+solar=function()return a.load'c'end,
+craft=function()return a.load'd'end,
+geist=function()return a.load'e'end,
+sfsymbols=function()return a.load'f'end,
+gravity=function()return a.load'g'end,
+}
+
+local function getPack(f)
+local g=d.Icons[f]
+if type(g)=="table"then
+return g
 end
 
-for i,j in pairs(h)do
-if type(j)=="number"or(type(j)=="string"and j:match"^rbxassetid://")then
-local l=j
-if type(j)=="number"then
-l="rbxassetid://"..tostring(j)
+local h=e[f]
+if not h then
+return nil
 end
 
-f.Icons[g].Icons[i]={
+g=loadPack(f,h)
+d.Icons[f]=g
+return g
+end
+
+local function parseIconString(f)
+if type(f)~="string"then
+return nil,nil
+end
+
+local g=f:find(":",1,true)
+if g then
+return f:sub(1,g-1),f:sub(g+1)
+end
+
+return nil,f
+end
+
+local function normalizeImageId(f)
+if type(f)=="number"then
+return"rbxassetid://"..tostring(f)
+end
+return f
+end
+
+function d.AddIcons(f,g)
+if type(f)~="string"or f==""then
+error("AddIcons: packName must be a non-empty string",2)
+end
+if type(g)~="table"then
+error("AddIcons: iconsData must be a table",2)
+end
+
+local h=getPack(f)
+if type(h)~="table"or type(h.Icons)~="table"then
+h={Icons={},Spritesheets={}}
+d.Icons[f]=h
+end
+h.Spritesheets=type(h.Spritesheets)=="table"and h.Spritesheets or{}
+
+for i,j in pairs(g)do
+if type(i)~="string"or i==""then
+warn"AddIcons: skipped an icon with an invalid name"
+elseif type(j)=="number"or(type(j)=="string"and j:match"^rbxassetid://")then
+local l=normalizeImageId(j)
+h.Icons[i]={
 Image=l,
 ImageRectSize=Vector2.new(0,0),
 ImageRectPosition=Vector2.new(0,0),
 Parts=nil,
 }
-f.Icons[g].Spritesheets[l]=l
+h.Spritesheets[l]=l
 elseif type(j)=="table"then
-if j.Image and j.ImageRectSize and j.ImageRectPosition then
-local l=j.Image
-if type(l)=="number"then
-l="rbxassetid://"..tostring(l)
-end
-
-f.Icons[g].Icons[i]={
+local l=normalizeImageId(j.Image)
+if l and j.ImageRectSize and j.ImageRectPosition then
+h.Icons[i]={
 Image=l,
 ImageRectSize=j.ImageRectSize,
 ImageRectPosition=j.ImageRectPosition,
 Parts=j.Parts,
 }
-
-if not f.Icons[g].Spritesheets[l]then
-f.Icons[g].Spritesheets[l]=l
+h.Spritesheets[l]=l
+else
+warn("AddIcons: invalid spritesheet data for icon '"..i.."'")
 end
 else
-warn("AddIcons: Invalid spritesheet data format for icon '"..i.."'")
+warn("AddIcons: unsupported data type for icon '"..i.."': "..type(j))
 end
-else
-warn("AddIcons: Unsupported data type for icon '"..i.."': "..type(j))
-end
-end
-end
-
-function f.SetIconsType(g)
-f.IconsType=g
-end
-
-function f.Init(g,h)
-f.New=g
-f.IconThemeTag=h
-
-return f
-end
-
-function f.Icon(g,h,i)
-i=i~=false
-local j,l=parseIconString(g)
-
-local m=j or h or f.IconsType
-local p=l
-
-local r=f.Icons[m]
-
-if r and r.Icons and r.Icons[p]then
-return{
-r.Spritesheets[tostring(r.Icons[p].Image)],
-r.Icons[p],
-}
-elseif r and r[p]and string.find(r[p],"rbxassetid://")then
-return i
-and{
-r[p],
-{ImageRectSize=Vector2.new(0,0),ImageRectPosition=Vector2.new(0,0)},
-}
-or r[p]
-end
-return nil
-end
-
-function f.GetIcon(g,h)
-return f.Icon(g,h,false)
-end
-
-function f.Icon2(g,h,i)
-return f.Icon(g,h,true)
-end
-
-function f.Image(g)
-local h={
-Icon=g.Icon or nil,
-Type=g.Type,
-Colors=g.Colors or{(f.IconThemeTag or Color3.new(1,1,1)),Color3.new(1,1,1)},
-Size=g.Size or UDim2.new(0,24,0,24),
-
-IconFrame=nil,
-}
-
-local i={}
-
-for j,l in next,h.Colors do
-i[j]={
-ThemeTag=typeof(l)=="string"and l,
-Color=typeof(l)=="Color3"and l,
-}
-end
-
-local j=f.Icon2(h.Icon,h.Type)
-local l=typeof(j)=="string"and string.find(j,"rbxassetid://")
-
-if f.New then
-local m=f.New
-
-local p=m("ImageLabel",{
-Size=h.Size,
-BackgroundTransparency=1,
-ImageColor3=i[1].Color or nil,
-ThemeTag=i[1].ThemeTag and{
-ImageColor3=i[1].ThemeTag,
-},
-Image=l and j or j[1],
-ImageRectSize=l and nil or j[2].ImageRectSize,
-ImageRectOffset=l and nil or j[2].ImageRectPosition,
-})
-
-if not l and j[2].Parts then
-for r,u in next,j[2].Parts do
-local v=f.Icon(u,h.Type)
-
-m("ImageLabel",{
-Size=UDim2.new(1,0,1,0),
-BackgroundTransparency=1,
-ImageColor3=i[1+r].Color or nil,
-ThemeTag=i[1+r].ThemeTag and{
-ImageColor3=i[1+r].ThemeTag,
-},
-Image=v[1],
-ImageRectSize=v[2].ImageRectSize,
-ImageRectOffset=v[2].ImageRectPosition,
-Parent=p,
-})
-end
-end
-
-h.IconFrame=p
-else
-local m=Instance.new"ImageLabel"
-m.Size=h.Size
-m.BackgroundTransparency=1
-m.ImageColor3=i[1].Color
-m.Image=l and j or j[1]
-m.ImageRectSize=l and nil or j[2].ImageRectSize
-m.ImageRectOffset=l and nil or j[2].ImageRectPosition
-
-if not l and j[2].Parts then
-for p,r in next,j[2].Parts do
-local u=f.Icon(r,h.Type)
-
-local v=Instance.New"ImageLabel"
-v.Size=UDim2.new(1,0,1,0)
-v.BackgroundTransparency=1
-v.ImageColor3=i[1+p].Color
-v.Image=u[1]
-v.ImageRectSize=u[2].ImageRectSize
-v.ImageRectOffset=u[2].ImageRectPosition
-v.Parent=m
-end
-end
-
-h.IconFrame=m
 end
 
 return h
 end
 
-return f end function a.i()
+function d.SetIconsType(f)
+if type(f)~="string"or f==""then
+return false
+end
+d.IconsType=f
+return true
+end
+
+function d.Init(f,g)
+if f~=nil and type(f)~="function"then
+error("Init: newFunction must be a function or nil",2)
+end
+d.New=f
+d.IconThemeTag=g
+return d
+end
+
+function d.Icon(f,g,h)
+local i,j=parseIconString(f)
+if not j then
+return nil
+end
+
+local l=i or g or d.IconsType
+local m=getPack(l)
+if type(m)~="table"then
+return nil
+end
+
+if type(m.Icons)=="table"then
+local p=m.Icons[j]
+if type(p)=="table"and p.Image then
+local r=p.Image
+local u=m.Spritesheets and m.Spritesheets[tostring(r)]or r
+local v={u,p}
+return h==false and r or v
+end
+end
+
+local p=m[j]
+if type(p)=="string"and p:find("rbxassetid://",1,true)then
+if h==false then
+return p
+end
+return{
+p,
+{
+ImageRectSize=Vector2.new(0,0),
+ImageRectPosition=Vector2.new(0,0),
+},
+}
+end
+
+return nil
+end
+
+function d.GetIcon(f,g)
+return d.Icon(f,g,false)
+end
+
+function d.Icon2(f,g,h)
+return d.Icon(f,g,h)
+end
+
+function d.Image(f)
+if type(f)~="table"then
+error("Image: icon configuration must be a table",2)
+end
+
+local g=d.Icon(f.Icon,f.Type,true)
+if not g then
+return nil
+end
+
+local h=type(f.Colors)=="table"and f.Colors
+or{d.IconThemeTag or Color3.new(1,1,1),Color3.new(1,1,1)}
+local i=type(f.Transparency)=="table"and f.Transparency or{0,0}
+local j=type(g)=="string"
+local l=not j and g[2]or nil
+
+local m=h[1]
+local p=i[1]
+local r={
+Size=f.Size or UDim2.new(0,24,0,24),
+BackgroundTransparency=1,
+Image=j and g or g[1],
+ImageColor3=typeof(m)=="Color3"and m or nil,
+ImageTransparency=type(p)=="number"and math.clamp(p,0,1)or nil,
+}
+
+if l then
+r.ImageRectSize=l.ImageRectSize
+r.ImageRectOffset=l.ImageRectPosition
+end
+if type(m)=="string"or type(p)=="string"then
+r.ThemeTag={
+ImageColor3=type(m)=="string"and m or nil,
+ImageTransparency=type(p)=="string"and p or nil,
+}
+end
+
+local u
+if d.New then
+u=d.New("ImageLabel",r)
+else
+u=Instance.new"ImageLabel"
+for v,x in pairs(r)do
+if x~=nil then
+u[v]=x
+end
+end
+end
+
+if l and type(l.Parts)=="table"then
+for v,x in ipairs(l.Parts)do
+local z=d.Icon(x,f.Type,true)
+if z then
+local A=type(z)=="table"and z[2]or nil
+local B=h[v+1]
+local C=i[v+1]
+local F={
+Size=UDim2.new(1,0,1,0),
+BackgroundTransparency=1,
+Image=type(z)=="string"and z or z[1],
+ImageColor3=typeof(B)=="Color3"and B or nil,
+ImageTransparency=type(C)=="number"and math.clamp(C,0,1)or nil,
+}
+if A then
+F.ImageRectSize=A.ImageRectSize
+F.ImageRectOffset=A.ImageRectPosition
+end
+if type(B)=="string"or type(C)=="string"then
+F.ThemeTag={
+ImageColor3=type(B)=="string"and B or nil,
+ImageTransparency=type(C)=="string"and C or nil,
+}
+end
+
+if d.New then
+F.Parent=u
+d.New("ImageLabel",F)
+else
+local G=Instance.new"ImageLabel"
+for H,J in pairs(F)do
+if J~=nil then
+G[H]=J
+end
+end
+G.Parent=u
+end
+end
+end
+end
+
+return{
+Icon=f.Icon,
+Type=f.Type,
+Colors=h,
+Transparency=i,
+Size=f.Size or UDim2.new(0,24,0,24),
+IconFrame=u,
+}
+end
+
+return d end function a.i()
 
 return function(b)
 return{
@@ -24867,8 +24949,6 @@ local h=b(game:GetService"HttpService")
 local i=a.load'a'local j=
 
 d.Heartbeat
-
-
 
 local l=a.load'h'
 
@@ -26728,12 +26808,11 @@ New=a.load'p'.New
 return[[
 {
     "name": "forktui",
-    "version": "1.6.66",
+    "version": "1.6.66-forktui.2",
     "main": "./dist/main.lua",
     "repository": "https://github.com/HamZyy4/ForktUI",
-    "discord": "",
     "author": "sukitovone",
-    "description": "Roblox UI Library for scripts",
+    "description": "A modular, responsive graphite interface toolkit for Roblox client experiences, maintained by sukitovone.",
     "license": "MIT",
     "scripts": {
         "dev": "bash build/build.sh dev $INPUT_FILE",
@@ -26741,20 +26820,21 @@ return[[
         "live": "python3 -m http.server 8642",
         "watch": "chokidar . -i 'node_modules' -i 'dist' -i 'build' -c 'npm run dev --'",
         "live-build": "concurrently \"npm run live\" \"npm run watch --\"",
-        "example-live-build": "INPUT_FILE=examples/full-example.client.lua npm run live-build",
-        "updater": "python3 updater/main.py"
+        "example-live-build": "INPUT_FILE=examples/full-example.client.lua npm run live-build"
     },
     "keywords": [
+        "roblox",
+        "luau",
         "ui-library",
-        "ui-design",
-        "script",
-        "script-hub",
-        "exploiting"
+        "interface",
+        "components",
+        "themeable"
     ],
     "devDependencies": {
         "chokidar-cli": "^3.0.0",
         "concurrently": "^9.2.0"
-    }
+    },
+    "homepage": "https://github.com/HamZyy4/ForktUI#readme"
 }
 ]]end function a.s()
 
@@ -27054,6 +27134,7 @@ Window=ag,
 ForktUI=ah,
 
 UIElements={},
+Closed=false,
 }
 
 if ae then
@@ -27065,13 +27146,23 @@ end
 
 af=af or"Dialog"
 
+local ak=390
+pcall(function()
+local al=workspace.CurrentCamera
+if al then
+ak=al.ViewportSize.X
+end
+end)
+local al=math.clamp(ak-24,240,460)
+
 if not ae then
 aj.UIElements.FullScreen=ab("Frame",{
+Name="DialogBackdrop",
 ZIndex=999,
 BackgroundTransparency=1,
 BackgroundColor3=Color3.fromHex"#000000",
 Size=UDim2.new(1,0,1,0),
-Active=false,
+Active=true,
 Visible=false,
 Parent=ad.Parent
 or(ag and ag.UIElements and ag.UIElements.Main and ag.UIElements.Main.Main),
@@ -27079,6 +27170,16 @@ or(ag and ag.UIElements and ag.UIElements.Main and ag.UIElements.Main.Main),
 ab("UICorner",{
 CornerRadius=UDim.new(0,ag.UICorner),
 }),
+})
+
+aj.UIElements.BackdropButton=ab("TextButton",{
+Name="BackdropButton",
+Size=UDim2.new(1,0,1,0),
+BackgroundTransparency=1,
+Text="",
+AutoButtonColor=false,
+ZIndex=999,
+Parent=aj.UIElements.FullScreen,
 })
 end
 
@@ -27099,7 +27200,7 @@ Name="Blur",
 })
 
 aj.UIElements.Main=ab("Frame",{
-Size=UDim2.new(0,280,0,0),
+Size=UDim2.new(0,al,0,0),
 ThemeTag={
 BackgroundColor3=af.."Background",
 },
@@ -27159,52 +27260,62 @@ aj.UIElements.Main,
 
 })
 
-function aj.Open(ak)
-if not ae then
+function aj.Open(am)
+if aj.Closed then
+return false
+end
+
+if not ae and aj.UIElements.FullScreen then
 aj.UIElements.FullScreen.Visible=true
 aj.UIElements.FullScreen.Active=true
 end
 
-task.spawn(function()
 aj.UIElements.MainContainer.Visible=true
-
-if not ae then
-ac(aj.UIElements.FullScreen,0.1,{BackgroundTransparency=0.65}):Play()
+if not ae and aj.UIElements.FullScreen then
+ac(aj.UIElements.FullScreen,0.16,{BackgroundTransparency=0.58}):Play()
 end
-ac(aj.UIElements.MainContainer,0.1,{ImageTransparency=0}):Play()
-
-
-task.spawn(function()
-task.wait(0.05)
+ac(aj.UIElements.MainContainer,0.16,{ImageTransparency=0}):Play()
+task.delay(0.04,function()
+if not aj.Closed and aj.UIElements.Main and aj.UIElements.Main.Parent then
 aj.UIElements.Main.Visible=true
-end)
-end)
 end
-function aj.Close(ak)
-if not ae then
-ac(aj.UIElements.FullScreen,0.1,{BackgroundTransparency=1}):Play()
-aj.UIElements.FullScreen.Active=false
-task.spawn(function()
-task.wait(0.1)
-aj.UIElements.FullScreen.Visible=false
 end)
+return true
 end
+
+function aj.Close(am)
+if aj.Closed then
+return function()end
+end
+aj.Closed=true
+
+if aj.UIElements.Main then
 aj.UIElements.Main.Visible=false
+end
+if aj.UIElements.FullScreen and aj.UIElements.FullScreen.Parent then
+ac(aj.UIElements.FullScreen,0.12,{BackgroundTransparency=1}):Play()
+aj.UIElements.FullScreen.Active=false
+end
+if aj.UIElements.MainContainer and aj.UIElements.MainContainer.Parent then
+ac(aj.UIElements.MainContainer,0.12,{ImageTransparency=1}):Play()
+end
 
-ac(aj.UIElements.MainContainer,0.1,{ImageTransparency=1}):Play()
-
-
-
-task.spawn(function()
-task.wait(0.1)
-if not ae then
-aj.UIElements.FullScreen:Destroy()
-else
+task.delay(0.14,function()
+if aj.UIElements.MainContainer and aj.UIElements.MainContainer.Parent then
 aj.UIElements.MainContainer:Destroy()
+end
+if aj.UIElements.FullScreen and aj.UIElements.FullScreen.Parent then
+aj.UIElements.FullScreen:Destroy()
 end
 end)
 
 return function()end
+end
+
+if aj.UIElements.BackdropButton then
+aa.AddSignal(aj.UIElements.BackdropButton.Activated,function()
+aj:Close()
+end)
 end
 
 
@@ -27217,506 +27328,378 @@ local aa={}
 
 local ab=a.load'j'
 local ac=ab.New
-local ad=ab.Tween
+local ad=a.load's'.New
+local ae=a.load't'.New
 
-local ae=a.load's'.New
-local af=a.load't'.New
+local function trim(af)
+return tostring(af or""):match"^%s*(.-)%s*$"
+end
 
-function aa.new(ag,ah,ai,aj)
+local function notify(af,ag,ah,ai)
+if af and type(af.Notify)=="function"then
+pcall(function()
+af:Notify{Title=ag,Content=tostring(ah or""),Icon=ai or"key-round"}
+end)
+end
+end
+
+local function copyText(af)
+local ag={setclipboard,toclipboard,set_clipboard}
+for ah,ai in pairs(ag)do
+if type(ai)=="function"then
+local aj,ak=pcall(ai,tostring(af))
+if aj and ak~=false then return true end
+end
+end
+return false
+end
+
+local function ensureFolder(af)
+if type(af)~="string"or af==""then return false end
+if type(makefolder)~="function"then return false end
+if type(isfolder)=="function"then
+local ag,ah=pcall(isfolder,af)
+if ag and ah then return true end
+end
+local ag=pcall(makefolder,af)
+if ag then return true end
+return type(isfolder)=="function"and select(2,pcall(isfolder,af))==true
+end
+
+local function saveKey(af,ag,ah)
+local ai=type(af.KeySystem)=="table"and af.KeySystem or{}
+if ai.SaveKey~=true then return true end
+if type(writefile)~="function"then return false end
+
+local aj=tostring(af.Folder or"Temp")
+local ak=aj.."/"..tostring(ag)..".key"
+if aj:find("/",1,true)then
+local al=""
+for am in aj:gmatch"[^/]+"do
+al=al==""and am or(al.."/"..am)
+ensureFolder(al)
+end
+else
+ensureFolder(aj)
+end
+
+local al=pcall(writefile,ak,tostring(ah))
+return al
+end
+
+local function makeLabel(af,ag,ah,ai,aj)
+return ac("TextLabel",{
+Text=af,
+TextSize=ag,
+TextTransparency=ah or 0,
+FontFace=Font.new(ab.Font,ai or Enum.FontWeight.Regular),
+ThemeTag={TextColor3=aj or"Text"},
+BackgroundTransparency=1,
+AutomaticSize="Y",
+Size=UDim2.new(1,0,0,0),
+TextWrapped=true,
+TextXAlignment="Left",
+})
+end
+
+function aa.new(af,ag,ah)
+local ai=type(af.KeySystem)=="table"and af.KeySystem or{}
+local aj=af.ForktUI
 local ak=a.load'u'
-local al=ak.Create(true,"Popup",ag.Window,ag.ForktUI,ag.ForktUI.ScreenGui.KeySystem)
+local al=ak.Create(true,"Popup",af.Window,aj,aj.ScreenGui.KeySystem)
+local am=al.UIElements.Main
 
-local am={}
+am.AutomaticSize="Y"
+am.Size=UDim2.new(0,440,0,0)
 
-local an
+local an=false
+local ao=false
+local ap=""
+local aq={}
+local ar
 
-local ao=(ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Width)or 200
-
-local ap=430
-if ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Image then
-ap=430+(ao/2)
+local function resolve(as)
+if an then return end
+an=true
+pcall(function()al:Close()end)
+if type(ah)=="function"then
+task.spawn(function()
+task.wait(0.12)
+pcall(ah,as==true)
+end)
+end
 end
 
-al.UIElements.Main.AutomaticSize="Y"
-al.UIElements.Main.Size=UDim2.new(0,ap,0,0)
-
-local aq
-
-if ag.Icon then
-aq=
-ab.Image(ag.Icon,ag.Title..":"..ag.Icon,0,"Temp","KeySystem",ag.IconThemed)
-aq.Size=UDim2.new(0,24,0,24)
-aq.LayoutOrder=-1
-end
-
-local ar=ac("TextLabel",{
-AutomaticSize="XY",
+local as=ac("Frame",{
+Name="ForktUIAccessPanel",
+Size=UDim2.new(1,0,0,0),
+AutomaticSize="Y",
 BackgroundTransparency=1,
-Text=ag.KeySystem.Title or ag.Title,
-FontFace=Font.new(ab.Font,Enum.FontWeight.SemiBold),
-ThemeTag={
-TextColor3="Text",
-},
-TextSize=20,
-})
-
-local as=ac("TextLabel",{
-AutomaticSize="XY",
-BackgroundTransparency=1,
-Text="Key System",
-AnchorPoint=Vector2.new(1,0.5),
-Position=UDim2.new(1,0,0.5,0),
-TextTransparency=1,
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-ThemeTag={
-TextColor3="Text",
-},
-TextSize=16,
-})
-
-local at=ac("Frame",{
-BackgroundTransparency=1,
-AutomaticSize="XY",
+Parent=am,
 },{
 ac("UIListLayout",{
-Padding=UDim.new(0,14),
-FillDirection="Horizontal",
-VerticalAlignment="Center",
+FillDirection="Vertical",
+SortOrder="LayoutOrder",
+Padding=UDim.new(0,12),
 }),
-aq,
-ar,
+ac("UIPadding",{
+PaddingTop=UDim.new(0,22),
+PaddingBottom=UDim.new(0,20),
+PaddingLeft=UDim.new(0,22),
+PaddingRight=UDim.new(0,22),
+}),
 })
+
+local at=type(ai.Thumbnail)=="table"and ai.Thumbnail or nil
+if at and at.Image then
+local au=at.Image
+if type(au)=="number"then au="rbxassetid://"..tostring(au)end
+local av=ac("ImageLabel",{
+Name="AccessThumbnail",
+Image=tostring(au),
+ScaleType=Enum.ScaleType.Crop,
+Size=UDim2.new(1,0,0,104),
+BackgroundTransparency=1,
+LayoutOrder=0,
+Parent=as,
+},{
+ac("UICorner",{CornerRadius=UDim.new(0,10)}),
+})
+if type(at.Title)=="string"and at.Title~=""then
+local aw=makeLabel(at.Title,15,0,Enum.FontWeight.SemiBold)
+aw.Size=UDim2.new(1,-24,0,26)
+aw.AutomaticSize="None"
+aw.Position=UDim2.new(0,12,0.5,0)
+aw.AnchorPoint=Vector2.new(0,0.5)
+aw.TextYAlignment=Enum.TextYAlignment.Center
+aw.TextStrokeTransparency=0.55
+aw.Parent=av
+end
+end
 
 local au=ac("Frame",{
-AutomaticSize="Y",
-Size=UDim2.new(1,0,0,0),
+Name="Header",
+Size=UDim2.new(1,0,0,62),
 BackgroundTransparency=1,
-},{
-
-
-
-
-
-at,
-as,
-})
-
-local av=af("Enter Key","key",nil,"Input",function(av)
-an=av
-end)
-
-local aw
-if ag.KeySystem.Note and ag.KeySystem.Note~=""then
-aw=ac("TextLabel",{
-Size=UDim2.new(1,0,0,0),
-AutomaticSize="Y",
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-TextXAlignment="Left",
-Text=ag.KeySystem.Note,
-TextSize=18,
-TextTransparency=0.4,
-ThemeTag={
-TextColor3="Text",
-},
-BackgroundTransparency=1,
-RichText=true,
-TextWrapped=true,
-})
-end
-
-local ax=ac("Frame",{
-Size=UDim2.new(1,0,0,42),
-BackgroundTransparency=1,
+LayoutOrder=1,
 },{
 ac("Frame",{
-BackgroundTransparency=1,
-AutomaticSize="X",
-Size=UDim2.new(0,0,1,0),
-},{
-ac("UIListLayout",{
-Padding=UDim.new(0,9),
-FillDirection="Horizontal",
-}),
-}),
-})
-
-local ay
-if ag.KeySystem.Thumbnail and ag.KeySystem.Thumbnail.Image then
-local az
-if ag.KeySystem.Thumbnail.Title then
-az=ac("TextLabel",{
-Text=ag.KeySystem.Thumbnail.Title,
-ThemeTag={
-TextColor3="Text",
-},
-TextSize=18,
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-BackgroundTransparency=1,
-AutomaticSize="XY",
-AnchorPoint=Vector2.new(0.5,0.5),
-Position=UDim2.new(0.5,0,0.5,0),
-})
-end
-ay=ac("ImageLabel",{
-Image=ag.KeySystem.Thumbnail.Image,
-BackgroundTransparency=1,
-Size=UDim2.new(0,ao,1,-12),
-Position=UDim2.new(0,6,0,6),
-Parent=al.UIElements.Main,
-ScaleType="Crop",
-},{
-az,
-ac("UICorner",{
-CornerRadius=UDim.new(0,20),
-}),
-})
-end
-
+Name="BrandMarker",
+Size=UDim2.new(0,4,0,42),
+Position=UDim2.new(0,0,0.5,0),
+AnchorPoint=Vector2.new(0,0.5),
+ThemeTag={BackgroundColor3="Primary"},
+BorderSizePixel=0,
+},{ac("UICorner",{CornerRadius=UDim.new(1,0)})}),
 ac("Frame",{
-
-Size=UDim2.new(1,ay and-ao or 0,1,0),
-Position=UDim2.new(0,ay and ao or 0,0,0),
-BackgroundTransparency=1,
-Parent=al.UIElements.Main,
-},{
-ac("Frame",{
-
-Size=UDim2.new(1,0,1,0),
+Size=UDim2.new(1,-18,1,0),
+Position=UDim2.new(0,18,0,0),
 BackgroundTransparency=1,
 },{
-ac("UIListLayout",{
-Padding=UDim.new(0,18),
-FillDirection="Vertical",
-}),
-au,
-aw,
-av,
-ax,
-ac("UIPadding",{
-PaddingTop=UDim.new(0,16),
-PaddingLeft=UDim.new(0,16),
-PaddingRight=UDim.new(0,16),
-PaddingBottom=UDim.new(0,16),
-}),
-}),
-})
-
-
-
-
-
-local az=ae("Exit","log-out",function()
-al:Close()()
-end,"Tertiary",ax.Frame)
-
-if ay then
-az.Parent=ay
-az.Size=UDim2.new(0,0,0,42)
-az.Position=UDim2.new(0,10,1,-10)
-az.AnchorPoint=Vector2.new(0,1)
-end
-
-if ag.KeySystem.URL then
-ae("Get key","key",function()
-setclipboard(ag.KeySystem.URL)
-end,"Secondary",ax.Frame)
-end
-
-if ag.KeySystem.API then
-
-
-
-
-
-
-
-
-local aA=240
-local aB=false
-local b=ae("Get key","key",nil,"Secondary",ax.Frame)
-
-local d=ab.NewRoundFrame(99,"Squircle",{
-Size=UDim2.new(0,1,1,0),
-ThemeTag={
-ImageColor3="Text",
-},
-ImageTransparency=0.9,
-})
-
-ac("Frame",{
-BackgroundTransparency=1,
-Size=UDim2.new(0,0,1,0),
-AutomaticSize="X",
-Parent=b.Frame,
-},{
-d,
-ac("UIPadding",{
-PaddingLeft=UDim.new(0,5),
-PaddingRight=UDim.new(0,5),
-}),
-})
-
-local f=ab.Image("chevron-down","chevron-down",0,"Temp","KeySystem",true)
-
-f.Size=UDim2.new(1,0,1,0)
-
-ac("Frame",{
-Size=UDim2.new(0,21,0,21),
-Parent=b.Frame,
-BackgroundTransparency=1,
-},{
-f,
-})
-
-local g=ab.NewRoundFrame(15,"Squircle",{
-Size=UDim2.new(1,0,0,0),
-AutomaticSize="Y",
-ThemeTag={
-ImageColor3="Background",
-},
-},{
-ac("UIPadding",{
-PaddingTop=UDim.new(0,5),
-PaddingLeft=UDim.new(0,5),
-PaddingRight=UDim.new(0,5),
-PaddingBottom=UDim.new(0,5),
-}),
 ac("UIListLayout",{
 FillDirection="Vertical",
+SortOrder="LayoutOrder",
 Padding=UDim.new(0,5),
-}),
-})
-
-local h=ac("Frame",{
-BackgroundTransparency=1,
-Size=UDim2.new(0,aA,0,0),
-ClipsDescendants=true,
-AnchorPoint=Vector2.new(1,0),
-Parent=b,
-Position=UDim2.new(1,0,1,15),
-},{
-g,
-})
-
-ac("TextLabel",{
-Text="Select Service",
-BackgroundTransparency=1,
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-ThemeTag={TextColor3="Text"},
-TextTransparency=0.2,
-TextSize=16,
-Size=UDim2.new(1,0,0,0),
-AutomaticSize="Y",
-TextWrapped=true,
-TextXAlignment="Left",
-Parent=g,
-},{
-ac("UIPadding",{
-PaddingTop=UDim.new(0,10),
-PaddingLeft=UDim.new(0,10),
-PaddingRight=UDim.new(0,10),
-PaddingBottom=UDim.new(0,10),
-}),
-})
-
-for i,l in next,ag.KeySystem.API do
-local m=ag.ForktUI.Services[l.Type]
-if m then
-local p={}
-for r,u in next,m.Args do
-table.insert(p,l[u])
-end
-
-local r=m.New(table.unpack(p))
-r.Type=l.Type
-table.insert(am,r)
-
-local u=ab.Image(
-l.Icon or m.Icon or Icons[l.Type]or"user",
-l.Icon or m.Icon or Icons[l.Type]or"user",
-0,
-"Temp",
-"KeySystem",
-true
-)
-u.Size=UDim2.new(0,24,0,24)
-
-local v=ab.NewRoundFrame(10,"Squircle",{
-Size=UDim2.new(1,0,0,0),
-ThemeTag={ImageColor3="Text"},
-ImageTransparency=1,
-Parent=g,
-AutomaticSize="Y",
-},{
-ac("UIListLayout",{
-FillDirection="Horizontal",
-Padding=UDim.new(0,10),
 VerticalAlignment="Center",
 }),
-u,
-ac("UIPadding",{
-PaddingTop=UDim.new(0,10),
-PaddingLeft=UDim.new(0,10),
-PaddingRight=UDim.new(0,10),
-PaddingBottom=UDim.new(0,10),
+makeLabel("FORKTUI  /  ACCESS CONTROL",10,0.35,Enum.FontWeight.Bold,"Primary"),
+makeLabel(ai.Title or"Verify access key",22,0,Enum.FontWeight.SemiBold),
 }),
-ac("Frame",{
-BackgroundTransparency=1,
-Size=UDim2.new(1,-34,0,0),
+})
+au.Parent=as
+
+local av=makeLabel(
+type(ai.Note)=="string"and ai.Note~=""and ai.Note
+or"Enter your access key to continue. ForktUI will check it against the configured access rule.",
+14,
+0.28,
+Enum.FontWeight.Regular
+)
+av.LayoutOrder=2
+av.Parent=as
+
+local aw=makeLabel("ACCESS KEY",10,0.25,Enum.FontWeight.Bold,"Primary")
+aw.LayoutOrder=3
+aw.Parent=as
+
+local ax=ae("Paste your access key","key-round",nil,"Input",function(ax)
+ap=ax
+end,false,12,false,true)
+ax.Name="AccessKeyInput"
+ax.LayoutOrder=4
+ax.Parent=as
+
+local ay
+local az
+local function addProviderButton(aA,aB,b)
+local d=ad(aA,aB or"external-link",b,"Secondary",az)
+d.Size=UDim2.new(1,0,0,38)
+d.AutomaticSize="None"
+d.LayoutOrder=#aq
+return d
+end
+
+if type(ai.API)=="table"and#ai.API>0 then
+ay=makeLabel("KEY PROVIDERS",10,0.25,Enum.FontWeight.Bold,"Primary")
+ay.LayoutOrder=5
+ay.Parent=as
+
+az=ac("Frame",{
+Name="ProviderList",
+Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
+BackgroundTransparency=1,
+LayoutOrder=6,
 },{
 ac("UIListLayout",{
 FillDirection="Vertical",
-Padding=UDim.new(0,5),
-HorizontalAlignment="Center",
+SortOrder="LayoutOrder",
+Padding=UDim.new(0,6),
 }),
-ac("TextLabel",{
-Text=l.Title or m.Name,
+})
+az.Parent=as
+
+for aA,aB in ipairs(ai.API)do
+if type(aB)=="table"and type(aB.Type)=="string"then
+local b=aj.Services and aj.Services[aB.Type]
+if b and type(b.New)=="function"then
+local d={}
+local f=type(b.Args)=="table"and b.Args or{}
+for g,h in ipairs(f)do
+table.insert(d,aB[h])
+end
+local g,h=pcall(function()
+return b.New(table.unpack(d))
+end)
+if g and type(h)=="table"then
+h.Type=aB.Type
+table.insert(aq,h)
+local i=aB.Title or b.Name or aB.Type
+addProviderButton(i,aB.Icon or b.Icon,function()
+if type(h.Copy)~="function"then
+notify(aj,"Provider unavailable","This provider does not expose a copy action.","circle-alert")
+return
+end
+local l,m=pcall(h.Copy)
+if l then
+notify(aj,"Provider ready","The provider action was opened or copied.","check-circle-2")
+else
+notify(aj,"Provider error",m,"circle-alert")
+end
+end)
+else
+ar=h
+end
+end
+end
+end
+end
+
+if type(ai.URL)=="string"and ai.URL~=""then
+local aA=type(ai.API)=="table"and#ai.API>0 and 7 or 5
+local aB=ad("Copy key link","link",function()
+if copyText(ai.URL)then
+notify(aj,"Link copied","The key link is ready to paste.","check-circle-2")
+else
+notify(aj,"Clipboard unavailable","Copy this link manually: "..ai.URL,"clipboard")
+end
+end,"Secondary",as)
+aB.Size=UDim2.new(1,0,0,40)
+aB.AutomaticSize="None"
+aB.LayoutOrder=aA
+end
+
+local aA=ac("Frame",{
+Name="Actions",
+Size=UDim2.new(1,0,0,42),
 BackgroundTransparency=1,
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-ThemeTag={TextColor3="Text"},
-TextTransparency=0.05,
-TextSize=18,
-Size=UDim2.new(1,0,0,0),
-AutomaticSize="Y",
-TextWrapped=true,
-TextXAlignment="Left",
+LayoutOrder=8,
+Parent=as,
+},{
+ac("UIListLayout",{
+FillDirection="Horizontal",
+SortOrder="LayoutOrder",
+Padding=UDim.new(0,8),
 }),
-ac("TextLabel",{
-Text=l.Desc or"",
-BackgroundTransparency=1,
-FontFace=Font.new(ab.Font,Enum.FontWeight.Regular),
-ThemeTag={TextColor3="Text"},
-TextTransparency=0.2,
-TextSize=16,
-Size=UDim2.new(1,0,0,0),
-AutomaticSize="Y",
-TextWrapped=true,
-Visible=l.Desc and true or false,
-TextXAlignment="Left",
-}),
-}),
-},true)
+})
 
-ab.AddSignal(v.MouseEnter,function()
-ad(v,0.08,{ImageTransparency=0.95}):Play()
-end)
-ab.AddSignal(v.InputEnded,function()
-ad(v,0.08,{ImageTransparency=1}):Play()
-end)
-ab.AddSignal(v.MouseButton1Click,function()
-r.Copy()
-ag.ForktUI:Notify{
-Title="Key System",
-Content="Key link copied to clipboard.",
-Image="key",
-}
-end)
-end
+local aB=ad("Continue","arrow-right",function()
+if ao or an then return end
+ao=true
+local aB=trim(ap)
+if aB==""then
+ao=false
+notify(aj,"Key required","Enter your key before continuing.","circle-alert")
+return
 end
 
-ab.AddSignal(b.MouseButton1Click,function()
-if not aB then
-ad(
-h,
-0.3,
-{Size=UDim2.new(0,aA,0,g.AbsoluteSize.Y+1)},
-Enum.EasingStyle.Quint,
-Enum.EasingDirection.Out
-):Play()
-ad(f,0.3,{Rotation=180},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
-else
-ad(
-h,
-0.25,
-{Size=UDim2.new(0,aA,0,0)},
-Enum.EasingStyle.Quint,
-Enum.EasingDirection.Out
-):Play()
-ad(f,0.25,{Rotation=0},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+local b=false
+local d="The key was not accepted. Check it and try again."
+
+if type(ai.KeyValidator)=="function"then
+local f,g=pcall(ai.KeyValidator,aB)
+b=f and g==true
+if not f then
+d="The key validator returned an error: "..tostring(g)
 end
-aB=not aB
-end)
-end
-
-local function handleSuccess(aA)
-al:Close()()
-writefile((ag.Folder or"Temp").."/"..ah..".key",tostring(aA))
-task.wait(0.4)
-ai(true)
-end
-
-local aA=ae("Submit","arrow-right",function()
-local aA=tostring(an or"empty")local aB=
-ag.Folder or ag.Title
-
-if ag.KeySystem.KeyValidator then
-local b=ag.KeySystem.KeyValidator(aA)
-
-if b then
-if ag.KeySystem.SaveKey then
-handleSuccess(aA)
-else
-al:Close()()
-task.wait(0.4)
-ai(true)
+elseif type(ai.API)~="table"or#ai.API==0 then
+local f=ai.Key
+if type(f)=="table"then
+for g,h in pairs(f)do
+if tostring(h)==aB then b=true;break end
 end
 else
-ag.ForktUI:Notify{
-Title="Key System. Error",
-Content="Invalid key.",
-Icon="triangle-alert",
-}
-end
-elseif not ag.KeySystem.API then
-local b=type(ag.KeySystem.Key)=="table"and table.find(ag.KeySystem.Key,aA)
-or ag.KeySystem.Key==aA
-
-if b then
-if ag.KeySystem.SaveKey then
-handleSuccess(aA)
-else
-al:Close()()
-task.wait(0.4)
-ai(true)
-end
+b=f~=nil and tostring(f)==aB
 end
 else
-local b,d
-for f,g in next,am do
-local h,i=g.Verify(aA)
-if h then
-b,d=true,i
+for f,g in ipairs(aq)do
+if type(g.Verify)=="function"then
+local h,i,l=pcall(g.Verify,aB)
+if h and i then
+b=true
 break
 end
-d=i
+if not h then
+d=tostring(i)
+elseif l then
+d=tostring(l)
+end
+end
+end
+if#aq==0 and ar then
+d="A configured key provider could not be initialized."
+end
 end
 
 if b then
-handleSuccess(aA)
+if ai.SaveKey==true and not saveKey(af,ag,aB)then
+notify(aj,"Key accepted","Access was granted, but this executor could not save the key.","check-circle-2")
+end
+ao=false
+resolve(true)
 else
-ag.ForktUI:Notify{
-Title="Key System. Error",
-Content=d,
-Icon="triangle-alert",
-}
+ao=false
+notify(aj,"Verification failed",d,"shield-alert")
 end
-end
-end,"Primary",ax)
+end,"Primary",aA)
+aB.Size=UDim2.new(0.66,-4,0,42)
+aB.AutomaticSize="None"
+aB.LayoutOrder=1
 
-aA.AnchorPoint=Vector2.new(1,0.5)
-aA.Position=UDim2.new(1,0,0.5,0)
+local b=ad("Exit","x",function()
+resolve(false)
+end,"Secondary",aA)
+b.Size=UDim2.new(0.34,-4,0,42)
+b.AutomaticSize="None"
+b.LayoutOrder=2
 
-
-
-
-
-
-
-
-
+local d=makeLabel("FORKTUI  •  ACCESS GATE",9,0.58,Enum.FontWeight.Medium,"Text")
+d.TextXAlignment="Center"
+d.LayoutOrder=9
+d.Parent=as
 
 al:Open()
+return al
 end
 
 return aa end function a.w()
@@ -28074,224 +28057,265 @@ return ab end function a.A()
 local aa={}
 
 local ab=a.load'j'
-local ac=ab.New local ad=
-ab.Tween
+local ac=ab.New
 
+function aa.new(ad,ae)
+if type(ad)~="table"then
+error("ForktUI.Popup: expected a configuration table",2)
+end
 
-function aa.new(ae,af)
+local af=ad.ForktUI
+if type(af)~="table"or type(af.Window)~="table"then
+error("ForktUI.Popup: create a window before opening a popup",2)
+end
+
 local ag={
-Title=ae.Title or"Dialog",
-Content=ae.Content,
-Icon=ae.Icon,
-IconThemed=ae.IconThemed,
-Thumbnail=ae.Thumbnail,
-Buttons=ae.Buttons,
-
-IconSize=22,
+Title=tostring(ad.Title or"Notice"),
+Content=ad.Content==nil and""or tostring(ad.Content),
+Icon=ad.Icon,
+IconThemed=ad.IconThemed,
+Thumbnail=type(ad.Thumbnail)=="table"and ad.Thumbnail or nil,
+Buttons=type(ad.Buttons)=="table"and ad.Buttons or{},
 }
 
-local ah=a.load'u'
-local ai=ah.Create(true,"Popup",ae.ForktUI.Window,ae.ForktUI,af)
-
-local aj=200
-
-local ak=430
-if ag.Thumbnail and ag.Thumbnail.Image then
-ak=430+(aj/2)
+local ah=390
+pcall(function()
+local ai=workspace.CurrentCamera
+if ai then
+ah=ai.ViewportSize.X
 end
+end)
 
-ai.UIElements.Main.AutomaticSize="Y"
-ai.UIElements.Main.Size=UDim2.new(0,ak,0,0)
+local ai=math.clamp(ah-24,240,440)
+local aj=ag.Thumbnail and ag.Thumbnail.Image and math.clamp(math.floor(ai*0.24),64,88)or 0
+local ak=a.load'u'.Create(true,"Popup",af.Window,af,ae)
+local al=ak.UIElements.Main
+al.Size=UDim2.new(0,ai,0,0)
+al.AutomaticSize=Enum.AutomaticSize.Y
+al.ClipsDescendants=false
 
+ac("UIPadding",{
+PaddingTop=UDim.new(0,18),
+PaddingBottom=UDim.new(0,18),
+PaddingLeft=UDim.new(0,18),
+PaddingRight=UDim.new(0,18),
+Parent=al,
+})
 
+ac("UIListLayout",{
+FillDirection=Enum.FillDirection.Vertical,
+SortOrder=Enum.SortOrder.LayoutOrder,
+Padding=UDim.new(0,14),
+HorizontalAlignment=Enum.HorizontalAlignment.Left,
+Parent=al,
+})
 
-local al
-
+local am
 if ag.Icon then
-al=ab.Image(
+am=ab.Image(
 ag.Icon,
-ag.Title..":"..ag.Icon,
+ag.Title..":"..tostring(ag.Icon),
 0,
-ae.ForktUI.Window,
+af.Window,
 "Popup",
 true,
-ae.IconThemed,
+ag.IconThemed,
 "PopupIcon"
 )
-al.Size=UDim2.new(0,ag.IconSize,0,ag.IconSize)
-al.LayoutOrder=-1
+am.Size=UDim2.fromOffset(22,22)
 end
 
-
-local am=ac("TextLabel",{
-AutomaticSize="Y",
+local an=ac("TextLabel",{
+Name="PopupTitle",
 BackgroundTransparency=1,
+AutomaticSize=Enum.AutomaticSize.Y,
+Size=UDim2.new(1,0,0,0),
 Text=ag.Title,
-TextXAlignment="Left",
+ThemeTag={TextColor3="PopupTitle"},
+TextSize=18,
+TextWrapped=true,
+TextXAlignment=Enum.TextXAlignment.Left,
 FontFace=Font.new(ab.Font,Enum.FontWeight.SemiBold),
-ThemeTag={
-TextColor3="PopupTitle",
-},
-TextSize=20,
-TextWrapped=true,
-Size=UDim2.new(1,al and-ag.IconSize-14 or 0,0,0)
+LayoutOrder=2,
 })
 
-local an=ac("Frame",{
-BackgroundTransparency=1,
-AutomaticSize="XY",
-},{
+local ao={
 ac("UIListLayout",{
-Padding=UDim.new(0,14),
-FillDirection="Horizontal",
-VerticalAlignment="Center"
+FillDirection=Enum.FillDirection.Horizontal,
+VerticalAlignment=Enum.VerticalAlignment.Center,
+Padding=UDim.new(0,12),
+SortOrder=Enum.SortOrder.LayoutOrder,
 }),
-al,am
-})
-
-local ao=ac("Frame",{
-AutomaticSize="Y",
-Size=UDim2.new(1,0,0,0),
+}
+if am then
+am.LayoutOrder=0
+table.insert(ao,am)
+end
+table.insert(ao,ac("Frame",{
+Name="TitleTextHolder",
+LayoutOrder=1,
 BackgroundTransparency=1,
+AutomaticSize=Enum.AutomaticSize.Y,
+Size=UDim2.new(1,-(am and 34 or 0),0,0),
 },{
-
-
-
-
-
 an,
-})
+}))
 
-local ap
-if ag.Content and ag.Content~=""then
-ap=ac("TextLabel",{
-Size=UDim2.new(1,0,0,0),
-AutomaticSize="Y",
-FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-TextXAlignment="Left",
-Text=ag.Content,
-TextSize=18,
-TextTransparency=.2,
-ThemeTag={
-TextColor3="PopupContent",
-},
+local ap=ac("Frame",{
+Name="PopupTitleContent",
 BackgroundTransparency=1,
-RichText=true,
+AutomaticSize=Enum.AutomaticSize.Y,
+Size=UDim2.new(1,-aj-(aj>0 and 12 or 0),0,0),
+LayoutOrder=1,
+},ao)
+
+local aq={ap}
+if aj>0 then
+local ar=ac("ImageLabel",{
+Name="PopupThumbnail",
+BackgroundColor3=Color3.fromRGB(35,38,44),
+BackgroundTransparency=0,
+Image=tostring(ag.Thumbnail.Image),
+ScaleType=Enum.ScaleType.Crop,
+Size=UDim2.fromOffset(aj,aj),
+ClipsDescendants=true,
+LayoutOrder=0,
+},{
+ac("UICorner",{CornerRadius=UDim.new(0,12)}),
+})
+table.insert(aq,1,ar)
+
+if ag.Thumbnail.Title and tostring(ag.Thumbnail.Title)~=""then
+ac("TextLabel",{
+Name="PopupThumbnailTitle",
+BackgroundTransparency=1,
+Text=tostring(ag.Thumbnail.Title),
+TextColor3=Color3.fromRGB(238,240,244),
+TextSize=11,
 TextWrapped=true,
-})
-end
-
-local aq=ac("Frame",{
-Size=UDim2.new(1,0,0,42),
-BackgroundTransparency=1,
-},{
-ac("UIListLayout",{
-Padding=UDim.new(0,9),
-FillDirection="Horizontal",
-HorizontalAlignment="Right"
-})
-})
-
-local ar
-if ag.Thumbnail and ag.Thumbnail.Image then
-local as
-if ag.Thumbnail.Title then
-as=ac("TextLabel",{
-Text=ag.Thumbnail.Title,
-ThemeTag={
-TextColor3="Text",
-},
-TextSize=18,
+Size=UDim2.new(1,-12,0,30),
+Position=UDim2.new(0,6,1,-36),
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
-BackgroundTransparency=1,
-AutomaticSize="XY",
-AnchorPoint=Vector2.new(0.5,0.5),
-Position=UDim2.new(0.5,0,0.5,0),
+Parent=ar,
 })
 end
-ar=ac("ImageLabel",{
-Image=ag.Thumbnail.Image,
+end
+
+local ar=ac("Frame",{
+Name="PopupHeader",
 BackgroundTransparency=1,
-Size=UDim2.new(0,aj,1,0),
-Parent=ai.UIElements.Main,
-ScaleType="Crop"
-},{
-as,
-ac("UICorner",{
-CornerRadius=UDim.new(0,0),
+AutomaticSize=Enum.AutomaticSize.Y,
+Size=UDim2.new(1,0,0,0),
+Parent=al,
+},aq)
+ac("UIListLayout",{
+FillDirection=Enum.FillDirection.Horizontal,
+VerticalAlignment=Enum.VerticalAlignment.Center,
+HorizontalAlignment=Enum.HorizontalAlignment.Left,
+Padding=UDim.new(0,12),
+SortOrder=Enum.SortOrder.LayoutOrder,
+Parent=ar,
 })
+
+if ag.Content~=""then
+ac("TextLabel",{
+Name="PopupDescription",
+BackgroundTransparency=1,
+AutomaticSize=Enum.AutomaticSize.Y,
+Size=UDim2.new(1,0,0,0),
+Text=ag.Content,
+ThemeTag={TextColor3="PopupContent"},
+TextSize=14,
+TextWrapped=true,
+TextXAlignment=Enum.TextXAlignment.Left,
+TextYAlignment=Enum.TextYAlignment.Top,
+RichText=true,
+FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
+LayoutOrder=2,
+Parent=al,
 })
 end
 
-ac("Frame",{
-
-Size=UDim2.new(1,ar and-aj or 0,1,0),
-Position=UDim2.new(0,ar and aj or 0,0,0),
+if#ag.Buttons>0 then
+local as=ai<360 or#ag.Buttons>2
+local at=8
+local au=40
+local av=ac("Frame",{
+Name="PopupActions",
 BackgroundTransparency=1,
-Parent=ai.UIElements.Main
-},{
-ac("Frame",{
-
-Size=UDim2.new(1,0,1,0),
-BackgroundTransparency=1,
+Size=UDim2.new(1,0,0,as and(#ag.Buttons*au+(#ag.Buttons-1)*at)or au),
+LayoutOrder=3,
+Parent=al,
 },{
 ac("UIListLayout",{
-Padding=UDim.new(0,18),
-FillDirection="Vertical",
-}),
-ao,
-ap,
-aq,
-ac("UIPadding",{
-PaddingTop=UDim.new(0,16),
-PaddingLeft=UDim.new(0,16),
-PaddingRight=UDim.new(0,16),
-PaddingBottom=UDim.new(0,16),
-})
+FillDirection=as and Enum.FillDirection.Vertical or Enum.FillDirection.Horizontal,
+HorizontalAlignment=Enum.HorizontalAlignment.Right,
+VerticalAlignment=Enum.VerticalAlignment.Center,
+Padding=UDim.new(0,at),
+SortOrder=Enum.SortOrder.LayoutOrder,
 }),
 })
 
-local as=a.load's'.New
-
-for at,au in next,ag.Buttons do
-as(au.Title,au.Icon,au.Callback,au.Variant,aq,ai)
+local aw=a.load's'.New
+for ax,ay in ipairs(ag.Buttons)do
+if type(ay)=="table"then
+local az=aw(
+ay.Title,
+ay.Icon,
+ay.Callback,
+ay.Variant,
+av,
+ak
+)
+az.LayoutOrder=ax
+if as then
+az.AutomaticSize=Enum.AutomaticSize.None
+az.Size=UDim2.new(1,0,0,au)
+end
+end
+end
 end
 
-ai:Open()
-
-
+ak:Open()
 return ag
 end
 
 return aa end function a.B()
+
 return function(aa,ab)
 return{
 Dark={
 Name="Dark",
 
-Accent=Color3.fromHex"#18181b",
-Dialog=Color3.fromHex"#1a1a1a",
-Outline=Color3.fromHex"#FFFFFF",
-Text=Color3.fromHex"#FFFFFF",
-Placeholder=Color3.fromHex"#a1a1a1",
-Background=Color3.fromHex"#101010",
-Button=Color3.fromHex"#52525b",
-Icon=Color3.fromHex"#a1a1aa",
-Toggle=Color3.fromHex"#33C759",
-Slider=Color3.fromHex"#0091FF",
-Checkbox=Color3.fromHex"#0091FF",
+
+
+Accent=Color3.fromHex"#252A32",
+Dialog=Color3.fromHex"#171B21",
+Outline=Color3.fromHex"#818A98",
+Text=Color3.fromHex"#F2F3F5",
+Placeholder=Color3.fromHex"#9299A4",
+Background=Color3.fromHex"#0B0D11",
+Button=Color3.fromHex"#414955",
+Icon=Color3.fromHex"#B6BDC7",
+Toggle=Color3.fromHex"#B3BAC5",
+Slider=Color3.fromHex"#B3BAC5",
+Checkbox=Color3.fromHex"#B3BAC5",
 
 PanelBackground=Color3.fromHex"#FFFFFF",
-PanelBackgroundTransparency=0.95,
+PanelBackgroundTransparency=0.025,
+TabBackground=Color3.fromHex"#FFFFFF",
+TabBackgroundHover=Color3.fromHex"#FFFFFF",
+TabBackgroundHoverTransparency=0.92,
+TabBackgroundActive=Color3.fromHex"#FFFFFF",
+TabBackgroundActiveTransparency=0.12,
 
-SliderIcon=Color3.fromHex"#908F95",
-Primary=Color3.fromHex"#0091FF",
+SliderIcon=Color3.fromHex"#C1C6CE",
+Primary=Color3.fromHex"#D2D7DF",
 
+LabelBackground=Color3.fromHex"#080A0D",
+LabelBackgroundTransparency=0.62,
 
-LabelBackground=Color3.fromHex"#000000",
-LabelBackgroundTransparency=0.83,
-
-ElementBackground=Color3.fromHex"#2A2A2C",
+ElementBackground=Color3.fromHex"#171B22",
 ElementBackgroundTransparency=0,
 },
 
@@ -29055,16 +29079,25 @@ end
 
 return aa end function a.F()
 
-local aa=(cloneref or clonereference or function(aa)return aa end)
+local aa=cloneref or clonereference or function(aa)
+return aa
+end
 
-
-local ab=aa(game:GetService"RunService")
-local ac=aa(game:GetService"HttpService")
+local ab=aa(game:GetService"HttpService")
+local ac=aa(game:GetService"RunService")
 
 local ad
+local ae={
+writefile=writefile,
+readfile=readfile,
+isfile=isfile,
+isfolder=isfolder,
+makefolder=makefolder,
+listfiles=listfiles,
+delfile=delfile,
+}
 
-local ae
-ae={
+local af={
 Folder=nil,
 Path=nil,
 Configs={},
@@ -29074,367 +29107,474 @@ Save=function(af)
 return{
 __type=af.__type,
 value=af.Default:ToHex(),
-transparency=af.Transparency or nil,
+transparency=af.Transparency,
 }
 end,
 Load=function(af,ag)
-if af and af.Update then
-af:Update(Color3.fromHex(ag.value),ag.transparency or nil)
+if af and type(af.Update)=="function"and type(ag.value)=="string"then
+af:Update(Color3.fromHex(ag.value),ag.transparency)
 end
-end
+end,
 },
 Dropdown={
 Save=function(af)
-return{
-__type=af.__type,
-value=af.Value,
-}
+local ag=af.Value
+if type(ag)=="table"then
+if type(ag.Title)=="string"then
+ag=ag.Title
+else
+local ah={}
+for ai,aj in ipairs(ag)do
+if type(aj)=="table"then
+local ak=aj.Title or aj.Name
+if ak~=nil then
+table.insert(ah,tostring(ak))
+end
+elseif type(aj)=="string"or type(aj)=="number"or type(aj)=="boolean"then
+table.insert(ah,aj)
+end
+end
+ag=ah
+end
+end
+return{__type=af.__type,value=ag}
 end,
 Load=function(af,ag)
-if af and af.Select then
+if af and type(af.Select)=="function"then
 af:Select(ag.value)
 end
-end
+end,
 },
 Input={
 Save=function(af)
-return{
-__type=af.__type,
-value=af.Value,
-}
+return{__type=af.__type,value=af.Value}
 end,
 Load=function(af,ag)
-if af and af.Set then
+if af and type(af.Set)=="function"then
 af:Set(ag.value)
 end
-end
+end,
 },
 Keybind={
 Save=function(af)
-return{
-__type=af.__type,
-value=af.Value,
-}
+return{__type=af.__type,value=af.Value}
 end,
 Load=function(af,ag)
-if af and af.Set then
+if af and type(af.Set)=="function"then
 af:Set(ag.value)
 end
-end
+end,
 },
 Slider={
 Save=function(af)
+local ag=af.Value
 return{
 __type=af.__type,
-value=af.Value.Default,
+value=type(ag)=="table"and ag.Default or ag,
 }
 end,
 Load=function(af,ag)
-if af and af.Set then
+if af and type(af.Set)=="function"then
 af:Set(tonumber(ag.value))
 end
-end
+end,
 },
 Toggle={
 Save=function(af)
-return{
-__type=af.__type,
-value=af.Value,
-}
+return{__type=af.__type,value=af.Value==true}
 end,
 Load=function(af,ag)
-if af and af.Set then
-af:Set(ag.value)
+if af and type(af.Set)=="function"then
+af:Set(ag.value==true)
 end
-end
+end,
+},
 },
 }
-}
 
-function ae.Init(af,ag)
-if not ag.Folder then
-warn"[ ForktUI.ConfigManager ] Window.Folder is not specified."
-return false
-end
-if ab:IsStudio()or not writefile then
-warn"[ ForktUI.ConfigManager ] The config system doesn't work in the studio."
-return false
+local function hasFileFunction(ag)
+return type(ae[ag])=="function"
 end
 
-ad=ag
-ae.Folder=ad.Folder
-ae.Path="ForktUI/"..tostring(ae.Folder).."/config/"
-
-if not isfolder(ae.Path)then
-makefolder(ae.Path)
+local function safeName(ag)
+local ah=tostring(ag or""):gsub("[^%w _%-]","_"):gsub("^%s+",""):gsub("%s+$","")
+return ah:sub(1,48)
 end
 
-local ah=ae:AllConfigs()
-
-for ai,aj in next,ah do
-if isfile and readfile and isfile(aj..".json")then
-ae.Configs[aj]=readfile(aj..".json")
-end
+local function ensureFolder(ag)
+if type(ag)~="string"or ag==""or not hasFileFunction"isfolder"or not hasFileFunction"makefolder"then
+return false,"Folder APIs are unavailable"
 end
 
-return ae
+local ah=""
+for ai in ag:gmatch"[^/\\]+"do
+if ai==".."or ai=="."then
+return false,"Invalid folder path"
 end
-
-function ae.SetPath(af,ag)
-if not ag then
-warn"[ ForktUI.ConfigManager ] Custom path is not specified."
-return false
+ah=ah==""and ai or(ah.."/"..ai)
+local aj,ak=pcall(isfolder,ah)
+if not aj then
+return false,tostring(ak)
 end
-
-ae.Path=ag
-if not ag:match"/$"then
-ae.Path=ag.."/"
+if not ak then
+local al,am=pcall(makefolder,ah)
+if not al then
+return false,tostring(am)
 end
-
-if not isfolder(ae.Path)then
-makefolder(ae.Path)
+end
 end
 
 return true
 end
 
-function ae.CreateConfig(af,ag,ah)
-local ai={
-Path=ae.Path..ag..".json",
-Elements={},
-CustomData={},
-AutoLoad=ah or false,
-Version=1.2,
-}
-
-if not ag then
-return false,"No config file is selected"
+function af.Init(ag,ah)
+if type(ah)~="table"or type(ah.Folder)~="string"or ah.Folder==""then
+warn"[ ForktUI.ConfigManager ] Set a non-empty Window.Folder to enable configs."
+return false
 end
 
-function ai.SetAsCurrent(aj)
-ad:SetCurrentConfig(ai)
+if ac:IsStudio()then
+warn"[ ForktUI.ConfigManager ] Filesystem-backed configs are unavailable in Roblox Studio. The UI can still be used."
+return false
 end
 
-function ai.Register(aj,ak,al)
-ai.Elements[ak]=al
+if not(hasFileFunction"writefile"and hasFileFunction"readfile"and hasFileFunction"isfile")then
+warn"[ ForktUI.ConfigManager ] Required filesystem functions are unavailable. Config persistence is disabled."
+return false
 end
 
-function ai.Set(aj,ak,al)
-ai.CustomData[ak]=al
+local ai=safeName(ah.Folder)
+if ai==""then
+warn"[ ForktUI.ConfigManager ] Window.Folder contains no valid characters."
+return false
 end
 
-function ai.Get(aj,ak)
-return ai.CustomData[ak]
+local aj="ForktUI/"..ai.."/config"
+local ak,al=ensureFolder(aj)
+if not ak then
+warn("[ ForktUI.ConfigManager ] Could not create config directory: "..tostring(al))
+return false
 end
 
-function ai.SetAutoLoad(aj,ak)
-ai.AutoLoad=ak
+ad=ah
+af.Folder=ai
+af.Path=aj.."/"
+af.Configs={}
+
+return af
 end
 
-function ai.Save(aj)
-if ad.PendingFlags then
-for ak,al in next,ad.PendingFlags do
-ai:Register(ak,al)
+function af.SetPath(ag,ah)
+if type(ah)~="string"or ah==""then
+return false,"A non-empty path is required"
 end
+if not(hasFileFunction"isfolder"and hasFileFunction"makefolder")then
+return false,"Folder APIs are unavailable"
+end
+
+local ai=ah:gsub("\\","/"):gsub("/+$","")
+local aj,ak=ensureFolder(ai)
+if not aj then
+return false,ak
+end
+
+af.Path=ai.."/"
+return true
+end
+
+function af.CreateConfig(ag,ah,ai)
+local aj=safeName(ah)
+if aj==""then
+return false,"A valid config name is required"
+end
+if type(af.Path)~="string"or af.Path==""then
+return false,"Config storage is not initialized"
 end
 
 local ak={
-__version=ai.Version,
-__elements={},
-__autoload=ai.AutoLoad,
-__custom=ai.CustomData
+Path=af.Path..aj..".json",
+Elements={},
+CustomData={},
+AutoLoad=ai==true,
+Version=1.2,
 }
 
-for al,am in next,ai.Elements do
-if ae.Parser[am.__type]then
-ak.__elements[tostring(al)]=ae.Parser[am.__type].Save(am)
+function ak.SetAsCurrent(al)
+if ad and type(ad.SetCurrentConfig)=="function"then
+ad:SetCurrentConfig(ak)
+end
+return ak
+end
+
+function ak.Register(al,am,an)
+if type(am)=="string"and am~=""and type(an)=="table"then
+ak.Elements[am]=an
+end
+return ak
+end
+
+function ak.Set(al,am,an)
+if type(am)=="string"then
+ak.CustomData[am]=an
+end
+return ak
+end
+
+function ak.Get(al,am)
+return ak.CustomData[am]
+end
+
+function ak.SetAutoLoad(al,am)
+ak.AutoLoad=am==true
+return ak
+end
+
+function ak.Save(al)
+if not hasFileFunction"writefile"then
+return false,"writefile is unavailable"
+end
+
+if ad and type(ad.PendingFlags)=="table"then
+for am,an in pairs(ad.PendingFlags)do
+ak:Register(am,an)
 end
 end
 
-local al=ac:JSONEncode(ak)
-if writefile then
-writefile(ai.Path,al)
+local am={
+__version=ak.Version,
+__elements={},
+__autoload=ak.AutoLoad,
+__custom=ak.CustomData,
+}
+
+for an,ao in pairs(ak.Elements)do
+local ap=type(ao)=="table"and af.Parser[ao.__type]
+if ap and type(ap.Save)=="function"then
+local aq,ar=pcall(ap.Save,ao)
+if aq then
+am.__elements[tostring(an)]=ar
+else
+warn("[ ForktUI.ConfigManager ] Skipped element '"..tostring(an).."': "..tostring(ar))
+end
+end
+end
+
+local an,ao=pcall(function()
+return ab:JSONEncode(am)
+end)
+if not an then
+return false,"Failed to encode config: "..tostring(ao)
+end
+
+local ap,aq=pcall(writefile,ak.Path,ao)
+if not ap then
+return false,"Failed to write config: "..tostring(aq)
+end
+
+af.Configs[aj]=ak
+return true,am
+end
+
+function ak.Load(al)
+if not(hasFileFunction"isfile"and hasFileFunction"readfile")then
+return false,"Filesystem read functions are unavailable"
+end
+
+local am,an=pcall(isfile,ak.Path)
+if not am or not an then
+return false,"Config file does not exist"
+end
+
+local ao,ap=pcall(readfile,ak.Path)
+if not ao or type(ap)~="string"then
+return false,"Failed to read config file: "..tostring(ap)
+end
+
+local aq,ar=pcall(function()
+return ab:JSONDecode(ap)
+end)
+if not aq or type(ar)~="table"then
+return false,"Config file contains invalid JSON"
+end
+
+if not ar.__version then
+ar={
+__version=ak.Version,
+__elements=ar,
+__custom={},
+}
+end
+
+if ad and type(ad.PendingFlags)=="table"then
+for as,at in pairs(ad.PendingFlags)do
+ak:Register(as,at)
+end
+end
+
+for as,at in pairs(ar.__elements or{})do
+local au=ak.Elements[as]
+local av=type(at)=="table"and af.Parser[at.__type]
+if au and av and type(av.Load)=="function"then
+local aw,ax=pcall(av.Load,au,at)
+if not aw then
+warn("[ ForktUI.ConfigManager ] Failed to restore '"..tostring(as).."': "..tostring(ax))
+end
+end
+end
+
+ak.CustomData=type(ar.__custom)=="table"and ar.__custom or{}
+return true,ak.CustomData
+end
+
+function ak.Delete(al)
+if not hasFileFunction"delfile"then
+return false,"delfile is unavailable"
+end
+if not hasFileFunction"isfile"then
+return false,"isfile is unavailable"
+end
+
+local am,an=pcall(isfile,ak.Path)
+if not am or not an then
+return false,"Config file does not exist"
+end
+
+local ao,ap=pcall(delfile,ak.Path)
+if not ao then
+return false,"Failed to delete config: "..tostring(ap)
+end
+
+af.Configs[aj]=nil
+if ad and ad.CurrentConfig==ak then
+ad.CurrentConfig=nil
+end
+return true
+end
+
+function ak.GetData(al)
+return{
+elements=ak.Elements,
+custom=ak.CustomData,
+autoload=ak.AutoLoad,
+}
+end
+
+ak:SetAsCurrent()
+af.Configs[aj]=ak
+
+
+if ai==nil and hasFileFunction"isfile"and hasFileFunction"readfile"then
+local al,am=pcall(isfile,ak.Path)
+if al and am then
+local an,ao=pcall(readfile,ak.Path)
+if an and type(ao)=="string"then
+local ap,aq=pcall(function()
+return ab:JSONDecode(ao)
+end)
+if ap and type(aq)=="table"and aq.__autoload==true then
+ak.AutoLoad=true
+end
+end
+end
+end
+
+if ak.AutoLoad and hasFileFunction"isfile"and hasFileFunction"readfile"then
+local al,am=pcall(isfile,ak.Path)
+if al and am then
+task.delay(0.35,function()
+local an,ao=ak:Load()
+if not an then
+warn("[ ForktUI.ConfigManager ] Auto-load failed for '"..aj.."': "..tostring(ao))
+end
+end)
+end
 end
 
 return ak
 end
 
-function ai.Load(aj)
-if isfile and not isfile(ai.Path)then
+function af.Config(ag,ah,ai)
+return af:CreateConfig(ah,ai)
+end
+
+function af.GetAutoLoadConfigs(ag)
+local ah={}
+for ai,aj in pairs(af.Configs)do
+if aj and aj.AutoLoad then
+table.insert(ah,ai)
+end
+end
+table.sort(ah)
+return ah
+end
+
+function af.DeleteConfig(ag,ah)
+local ai=safeName(ah)
+if ai==""then
+return false,"A valid config name is required"
+end
+if not(hasFileFunction"delfile"and hasFileFunction"isfile")then
+return false,"File deletion functions are unavailable"
+end
+if type(af.Path)~="string"then
+return false,"Config storage is not initialized"
+end
+
+local aj=af.Path..ai..".json"
+local ak,al=pcall(isfile,aj)
+if not ak or not al then
 return false,"Config file does not exist"
 end
 
-local ak,al=pcall(function()
-local ak=readfile or function()
-warn"[ ForktUI.ConfigManager ] The config system doesn't work in the studio."
-return nil
-end
-return ac:JSONDecode(ak(ai.Path))
-end)
-
-if not ak then
-return false,"Failed to parse config file"
+local am,an=pcall(delfile,aj)
+if not am then
+return false,"Failed to delete config: "..tostring(an)
 end
 
-if not al.__version then
-local am={
-__version=ai.Version,
-__elements=al,
-__custom={}
-}
-al=am
-end
-
-if ad.PendingFlags then
-for am,an in next,ad.PendingFlags do
-ai:Register(am,an)
-end
-end
-
-for am,an in next,(al.__elements or{})do
-if ai.Elements[am]and ae.Parser[an.__type]then
-task.spawn(function()
-ae.Parser[an.__type].Load(ai.Elements[am],an)
-end)
-end
-end
-
-ai.CustomData=al.__custom or{}
-
-return ai.CustomData
-end
-
-function ai.Delete(aj)
-if not delfile then
-return false,"delfile function is not available"
-end
-
-if not isfile(ai.Path)then
-return false,"Config file does not exist"
-end
-
-local ak,al=pcall(function()
-delfile(ai.Path)
-end)
-
-if not ak then
-return false,"Failed to delete config file: "..tostring(al)
-end
-
-ae.Configs[ag]=nil
-
-if ad.CurrentConfig==ai then
+af.Configs[ai]=nil
+if ad and ad.CurrentConfig and ad.CurrentConfig.Path==aj then
 ad.CurrentConfig=nil
 end
-
-return true,"Config deleted successfully"
+return true
 end
 
-function ai.GetData(aj)
-return{
-elements=ai.Elements,
-custom=ai.CustomData,
-autoload=ai.AutoLoad
-}
+function af.AllConfigs(ag)
+local ah={}
+if type(af.Path)~="string"or af.Path==""then
+return ah
+end
+if not hasFileFunction"listfiles"then
+for ai in pairs(af.Configs)do
+table.insert(ah,ai)
+end
+table.sort(ah)
+return ah
 end
 
-
-if isfile(ai.Path)then
-local aj,ak=pcall(function()
-return ac:JSONDecode(readfile(ai.Path))
-end)
-
-if aj and ak and ak.__autoload then
-ai.AutoLoad=true
-
-task.spawn(function()
-task.wait(0.5)
-local al,am=pcall(function()
-return ai:Load()
-end)
-if al then
-if ad.Debug then print("[ ForktUI.ConfigManager ] AutoLoaded config: "..ag)end
-else
-warn("[ ForktUI.ConfigManager ] Failed to AutoLoad config: "..ag.." - "..tostring(am))
+local ai,aj=pcall(listfiles,af.Path)
+if not ai or type(aj)~="table"then
+return ah
 end
-end)
+
+for ak,al in ipairs(aj)do
+if type(al)=="string"then
+local am=al:match"([^/\\]+)%.json$"
+if am then
+table.insert(ah,am)
+end
 end
 end
 
-
-ai:SetAsCurrent()
-ae.Configs[ag]=ai
-return ai
+table.sort(ah)
+return ah
 end
 
-function ae.Config(af,ag,ah)
-return ae:CreateConfig(ag,ah)
+function af.GetConfig(ag,ah)
+return af.Configs[safeName(ah)]
 end
 
-function ae.GetAutoLoadConfigs(af)
-local ag={}
+return af end function a.G()
 
-for ah,ai in pairs(ae.Configs)do
-if ai.AutoLoad then
-table.insert(ag,ah)
-end
-end
-
-return ag
-end
-
-function ae.DeleteConfig(af,ag)
-if not delfile then
-return false,"delfile function is not available"
-end
-
-local ah=ae.Path..ag..".json"
-
-if not isfile(ah)then
-return false,"Config file does not exist"
-end
-
-local ai,aj=pcall(function()
-delfile(ah)
-end)
-
-if not ai then
-return false,"Failed to delete config file: "..tostring(aj)
-end
-
-ae.Configs[ag]=nil
-
-if ad.CurrentConfig and ad.CurrentConfig.Path==ah then
-ad.CurrentConfig=nil
-end
-
-return true,"Config deleted successfully"
-end
-
-function ae.AllConfigs(af)
-if not listfiles then return{}end
-
-local ag={}
-if not isfolder(ae.Path)then
-makefolder(ae.Path)
-return ag
-end
-
-for ah,ai in next,listfiles(ae.Path)do
-local aj=ai:match"([^\\/]+)%.json$"
-if aj then
-table.insert(ag,aj)
-end
-end
-
-return ag
-end
-
-function ae.GetConfig(af,ag)
-return ae.Configs[ag]
-end
-
-return ae end function a.G()
 local aa={}
 
 local ab=a.load'j'
@@ -31446,7 +31586,7 @@ Value=ak.Value or{},
 Icons=ak.Icons or nil,
 IsTooltip=ak.IsTooltip or false,
 IsTextbox=ak.IsTextbox,
-Step=ak.Step or 1,
+Step=tonumber(ak.Step)or 1,
 Callback=ak.Callback or function()end,
 UIElements={},
 IsFocusing=false,
@@ -31471,34 +31611,62 @@ end
 local am
 local an
 local ao
-local ap=al.Value.Default or al.Value.Min or 0
-
-local aq=ap
-local ar=(ap-(al.Value.Min or 0))/((al.Value.Max or 100)-(al.Value.Min or 0))
-
-local as=true
-local at=al.Step%1~=0
-
-local function FormatValue(au)
-if at then
-return tonumber(string.format("%.2f",au))
+local ap=false
+local aq=tonumber(al.Value.Min)or 0
+local ar=tonumber(al.Value.Max)or 100
+if ar<=aq then
+ar=aq+1
+warn"ForktUI Slider: Max must be greater than Min; adjusted the range."
 end
-return math.floor(au+0.5)
+if al.Step<=0 then
+al.Step=1
+warn"ForktUI Slider: Step must be positive; using 1."
+end
+al.Value.Min=aq
+al.Value.Max=ar
+local as=math.clamp(tonumber(al.Value.Default)or aq,aq,ar)
+al.Value.Default=as
+
+local at=as
+local au=(as-aq)/(ar-aq)
+
+local av=true
+local aw=al.Step%1~=0 or aq%1~=0 or ar%1~=0
+
+local function FormatValue(ax)
+if aw then
+return tonumber(string.format("%.2f",ax))
+end
+return math.floor(ax+0.5)
 end
 
-local function CalculateValue(au)
-if at then
-return math.floor(au/al.Step+0.5)*al.Step
-else
-return math.floor(au/al.Step+0.5)*al.Step
-end
+local function CalculateValue(ax)
+local ay=math.floor((ax-al.Value.Min)/al.Step+0.5)
+local az=al.Value.Min+ay*al.Step
+return math.clamp(az,al.Value.Min,al.Value.Max)
 end
 
-local au,av
-local aw=32
+as=CalculateValue(as)
+al.Value.Default=as
+at=as
+au=(as-aq)/(ar-aq)
+
+local function GetInputDelta(ax)
+local ay=al.UIElements.SliderIcon.AbsoluteSize.X
+if ay<=0 then
+return nil
+end
+local az=ax.UserInputType==Enum.UserInputType.Touch
+and ax.Position.X
+or ac:GetMouseLocation().X
+return math.clamp((az-al.UIElements.SliderIcon.AbsolutePosition.X)/ay,0,1)
+end
+
+local ax,ay
+local az=32
 if al.Icons then
 if al.Icons.From then
-au=ae.Image(
+ax=ae.Image(
 al.Icons.From,
 al.Icons.From,
 0,
@@ -31508,11 +31676,11 @@ true,
 true,
 "SliderIconFrom"
 )
-au.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
-aw=aw+al.IconSize-2
+ax.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
+az=az+al.IconSize-2
 end
 if al.Icons.To then
-av=ae.Image(
+ay=ae.Image(
 al.Icons.To,
 al.Icons.To,
 0,
@@ -31522,8 +31690,8 @@ true,
 true,
 "SliderIconTo"
 )
-av.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
-aw=aw+al.IconSize-2
+ay.Size=UDim2.new(0,al.IconSize,0,al.IconSize)
+az=az+al.IconSize-2
 end
 end
 al.SliderFrame=a.load'I'{
@@ -31542,7 +31710,7 @@ Tags=ak.Tags,
 
 al.UIElements.SliderIcon=ae.NewRoundFrame(99,"Squircle",{
 ImageTransparency=0.95,
-Size=UDim2.new(1,not al.IsTextbox and-aw or(-al.TextBoxWidth-8),0,4),
+Size=UDim2.new(1,not al.IsTextbox and-az or(-al.TextBoxWidth-8),0,4),
 AnchorPoint=Vector2.new(0.5,0.5),
 Position=UDim2.new(0.5,0,0.5,0),
 Name="Frame",
@@ -31552,7 +31720,7 @@ ImageColor3="Text",
 },{
 ae.NewRoundFrame(99,"Squircle",{
 Name="Frame",
-Size=UDim2.new(ar,0,1,0),
+Size=UDim2.new(au,0,1,0),
 ImageTransparency=0.1,
 ThemeTag={
 ImageColor3="Slider",
@@ -31598,13 +31766,13 @@ HorizontalAlignment=al.Icons
 and(al.Icons.From and(al.Icons.To and"Center"or"Left")or al.Icons.To and"Right")
 or"Center",
 }),
-au,
+ax,
 al.UIElements.SliderIcon,
-av,
+ay,
 af("TextBox",{
 Size=UDim2.new(0,al.TextBoxWidth,0,0),
 TextXAlignment="Left",
-Text=FormatValue(ap),
+Text=FormatValue(as),
 ThemeTag={
 TextColor3="Text",
 },
@@ -31618,28 +31786,28 @@ Visible=al.IsTextbox,
 }),
 })
 
-local ax
+local aA
 if al.IsTooltip then
-ax=a.load'H'.New(
-ap,
+aA=a.load'H'.New(
+as,
 al.UIElements.SliderIcon.Frame.Thumb,
 true,
 "Secondary",
 "Small",
 false
 )
-ax.Container.AnchorPoint=Vector2.new(0.5,1)
-ax.Container.Position=UDim2.new(0.5,0,0,-8)
+aA.Container.AnchorPoint=Vector2.new(0.5,1)
+aA.Container.Position=UDim2.new(0.5,0,0,-8)
 end
 
-function al.Lock(ay)
+function al.Lock(aB)
 al.Locked=true
-as=false
+av=false
 return al.SliderFrame:Lock(al.LockedTitle)
 end
-function al.Unlock(ay)
+function al.Unlock(aB)
 al.Locked=false
-as=true
+av=true
 return al.SliderFrame:Unlock()
 end
 
@@ -31648,83 +31816,119 @@ al:Lock()
 end
 
 
-local ay=ak.Tab.UIElements.ContainerFrame
+local aB=ak.Tab.UIElements.ContainerFrame
+local b=ak.ForktUI.GenerateGUID()
+local d=true
 
-function al.Set(az,aA,aB)
-if as then
+local function StopDragging(f)
+if an then
+an:Disconnect()
+an=nil
+end
+if ao then
+ao:Disconnect()
+ao=nil
+end
+if ai then
+ai=false
+if aB and aB.Parent then
+aB.ScrollingEnabled=d
+end
+end
+if ak.ForktUI.CurrentInput==b then
+ak.ForktUI.CurrentInput=nil
+end
+am=nil
+if aA then
+if f then
+task.spawn(function()
+pcall(aA.Close,aA,true)
+end)
+else
+pcall(aA.Close,aA,false)
+end
+end
+end
+
+function al.Set(f,g,h)
+if ap then
+return false
+end
+g=tonumber(g)
+if not g then
+return false
+end
+if av then
 if
 not al.IsFocusing
 and not ai
 and(
-not aB
+not h
 or(
-aB.UserInputType==Enum.UserInputType.MouseButton1
-or aB.UserInputType==Enum.UserInputType.Touch
+h.UserInputType==Enum.UserInputType.MouseButton1
+or h.UserInputType==Enum.UserInputType.Touch
 )
 )
 then
-if aB then
-am=(aB.UserInputType==Enum.UserInputType.Touch)
-ay.ScrollingEnabled=false
+if h then
+am=(h.UserInputType==Enum.UserInputType.Touch)
+if aB and aB.Parent then
+d=aB.ScrollingEnabled
+aB.ScrollingEnabled=false
+end
 ai=true
 
-local b=am and aB.Position.X or ac:GetMouseLocation().X
-local d=math.clamp(
-(b-al.UIElements.SliderIcon.AbsolutePosition.X)
-/al.UIElements.SliderIcon.AbsoluteSize.X,
-0,
-1
-)
-aA=CalculateValue(al.Value.Min+d*(al.Value.Max-al.Value.Min))
-aA=math.clamp(aA,al.Value.Min or 0,al.Value.Max or 100)
-
-if aA~=aq then
-ag(al.UIElements.SliderIcon.Frame,0.05,{Size=UDim2.new(d,0,1,0)}):Play()
-al.UIElements.SliderContainer.TextBox.Text=FormatValue(aA)
-if ax then
-ax.TitleFrame.Text=FormatValue(aA)
+local i=GetInputDelta(h)
+if i==nil then
+StopDragging(false)
+return false
 end
-al.Value.Default=FormatValue(aA)
-aq=aA
-ae.SafeCallback(al.Callback,FormatValue(aA))
+g=CalculateValue(al.Value.Min+i*(al.Value.Max-al.Value.Min))
+g=math.clamp(g,al.Value.Min,al.Value.Max)
+i=math.clamp((g-al.Value.Min)/(al.Value.Max-al.Value.Min),0,1)
+
+if g~=at then
+al.UIElements.SliderIcon.Frame.Size=UDim2.new(i,0,1,0)
+al.UIElements.SliderContainer.TextBox.Text=FormatValue(g)
+if aA then
+aA.TitleFrame.Text=FormatValue(g)
+end
+al.Value.Default=FormatValue(g)
+at=g
+ae.SafeCallback(al.Callback,FormatValue(g))
 end
 
 an=ad.RenderStepped:Connect(function()
-local f=am and aB.Position.X or ac:GetMouseLocation().X
-local g=math.clamp(
-(f-al.UIElements.SliderIcon.AbsolutePosition.X)
-/al.UIElements.SliderIcon.AbsoluteSize.X,
-0,
-1
-)
-aA=CalculateValue(al.Value.Min+g*(al.Value.Max-al.Value.Min))
-
-if aA~=aq then
-ag(al.UIElements.SliderIcon.Frame,0.05,{Size=UDim2.new(g,0,1,0)}):Play()
-al.UIElements.SliderContainer.TextBox.Text=FormatValue(aA)
-if ax then
-ax.TitleFrame.Text=FormatValue(aA)
+local l=GetInputDelta(h)
+if l==nil then
+StopDragging(false)
+return
 end
-al.Value.Default=FormatValue(aA)
-aq=aA
-ae.SafeCallback(al.Callback,FormatValue(aA))
+g=CalculateValue(al.Value.Min+l*(al.Value.Max-al.Value.Min))
+g=math.clamp(g,al.Value.Min,al.Value.Max)
+l=math.clamp((g-al.Value.Min)/(al.Value.Max-al.Value.Min),0,1)
+
+if g~=at then
+al.UIElements.SliderIcon.Frame.Size=UDim2.new(l,0,1,0)
+al.UIElements.SliderContainer.TextBox.Text=FormatValue(g)
+if aA then
+aA.TitleFrame.Text=FormatValue(g)
+end
+al.Value.Default=FormatValue(g)
+at=g
+ae.SafeCallback(al.Callback,FormatValue(g))
 end
 end)
 
 
-ao=ac.InputEnded:Connect(function(f)
+ao=ac.InputEnded:Connect(function(l)
 if
 (
-f.UserInputType==Enum.UserInputType.MouseButton1
-or f.UserInputType==Enum.UserInputType.Touch
-)and aB==f
+l.UserInputType==Enum.UserInputType.MouseButton1
+or l.UserInputType==Enum.UserInputType.Touch
+)and h==l
 then
-an:Disconnect()
-ao:Disconnect()
-ai=false
-ay.ScrollingEnabled=true
-
-ak.ForktUI.CurrentInput=nil
+StopDragging(false)
 
 if ak.Window.NewElements then
 ag(al.UIElements.SliderIcon.Frame.Thumb,0.2,{
@@ -31737,89 +31941,111 @@ ak.Window.NewElements and(al.ThumbSize+4)or(al.ThumbSize+2)
 ),
 },Enum.EasingStyle.Quint,Enum.EasingDirection.InOut):Play()
 end
-if ax then
-ax:Close(false)
-end
 end
 end)
 else
-aA=math.clamp(aA,al.Value.Min or 0,al.Value.Max or 100)
+g=math.clamp(g,al.Value.Min or 0,al.Value.Max or 100)
 
-local b=math.clamp(
-(aA-(al.Value.Min or 0))/((al.Value.Max or 100)-(al.Value.Min or 0)),
+local i=math.clamp(
+(g-(al.Value.Min or 0))/((al.Value.Max or 100)-(al.Value.Min or 0)),
 0,
 1
 )
-aA=CalculateValue(al.Value.Min+b*(al.Value.Max-al.Value.Min))
+g=CalculateValue(al.Value.Min+i*(al.Value.Max-al.Value.Min))
+g=math.clamp(g,al.Value.Min,al.Value.Max)
+i=math.clamp((g-al.Value.Min)/(al.Value.Max-al.Value.Min),0,1)
 
-if aA~=aq then
-ag(al.UIElements.SliderIcon.Frame,0.05,{Size=UDim2.new(b,0,1,0)}):Play()
-al.UIElements.SliderContainer.TextBox.Text=FormatValue(aA)
-if ax then
-ax.TitleFrame.Text=FormatValue(aA)
-end
-al.Value.Default=FormatValue(aA)
-aq=aA
-ae.SafeCallback(al.Callback,FormatValue(aA))
-end
-end
-end
-end
-end
-
-function al.SetMax(az,aA)
-al.Value.Max=aA
-
-local aB=tonumber(al.Value.Default)or aq
-if aB>aA then
-al:Set(aA)
-else
-local b=
-math.clamp((aB-(al.Value.Min or 0))/(aA-(al.Value.Min or 0)),0,1)
-ag(al.UIElements.SliderIcon.Frame,0.1,{Size=UDim2.new(b,0,1,0)}):Play()
-end
-end
-
-function al.SetMin(az,aA)
-al.Value.Min=aA
-
-local aB=tonumber(al.Value.Default)or aq
-if aB<aA then
-al:Set(aA)
-else
-local b=math.clamp((aB-aA)/((al.Value.Max or 100)-aA),0,1)
-ag(al.UIElements.SliderIcon.Frame,0.1,{Size=UDim2.new(b,0,1,0)}):Play()
-end
-end
-
-ae.AddSignal(al.UIElements.SliderContainer.TextBox.FocusLost,function(az)
-local aA=tonumber(al.UIElements.SliderContainer.TextBox.Text)
+if g~=at then
+ag(al.UIElements.SliderIcon.Frame,0.05,{Size=UDim2.new(i,0,1,0)}):Play()
+al.UIElements.SliderContainer.TextBox.Text=FormatValue(g)
 if aA then
-al:Set(aA)
+aA.TitleFrame.Text=FormatValue(g)
+end
+al.Value.Default=FormatValue(g)
+at=g
+ae.SafeCallback(al.Callback,FormatValue(g))
+end
+end
+end
+end
+end
+
+function al.SetMax(f,g)
+g=tonumber(g)
+if not g or g<=(al.Value.Min or 0)then
+return false
+end
+al.Value.Max=g
+
+local h=tonumber(al.Value.Default)or at
+if h>g then
+al:Set(g)
 else
-al.UIElements.SliderContainer.TextBox.Text=FormatValue(aq)
-if ax then
-ax.TitleFrame.Text=FormatValue(aq)
+local i=
+math.clamp((h-(al.Value.Min or 0))/(g-(al.Value.Min or 0)),0,1)
+ag(al.UIElements.SliderIcon.Frame,0.1,{Size=UDim2.new(i,0,1,0)}):Play()
+end
+end
+
+function al.SetMin(f,g)
+g=tonumber(g)
+if not g or g>=(al.Value.Max or 100)then
+return false
+end
+al.Value.Min=g
+
+local h=tonumber(al.Value.Default)or at
+if h<g then
+al:Set(g)
+else
+local i=math.clamp((h-g)/((al.Value.Max or 100)-g),0,1)
+ag(al.UIElements.SliderIcon.Frame,0.1,{Size=UDim2.new(i,0,1,0)}):Play()
+end
+end
+
+ae.AddSignal(al.UIElements.SliderContainer.TextBox.FocusLost,function(f)
+local g=tonumber(al.UIElements.SliderContainer.TextBox.Text)
+if g then
+al:Set(g)
+else
+al.UIElements.SliderContainer.TextBox.Text=FormatValue(at)
+if aA then
+aA.TitleFrame.Text=FormatValue(at)
 end
 end
 end)
 
-local az=ak.ForktUI.GenerateGUID()
+function al.Destroy(f)
+if ap then
+return
+end
+ap=true
+StopDragging(true)
+if al.SliderFrame and type(al.SliderFrame.Destroy)=="function"then
+al.SliderFrame:Destroy()
+end
+end
 
-ae.AddSignal(al.UIElements.SliderContainer.InputBegan,function(aA)
+ae.AddSignal(al.UIElements.SliderContainer.InputBegan,function(f)
+if ap then
+return
+end
 if al.Locked or ai then
 return
 end
 if
-aA.UserInputType==Enum.UserInputType.MouseButton1
-or aA.UserInputType==Enum.UserInputType.Touch
+f.UserInputType==Enum.UserInputType.MouseButton1
+or f.UserInputType==Enum.UserInputType.Touch
 then
-if ak.ForktUI.CurrentInput and ak.ForktUI.CurrentInput~=az then
+if ak.ForktUI.CurrentInput and ak.ForktUI.CurrentInput~=b then
 return
 end
-ak.ForktUI.CurrentInput=az
+ak.ForktUI.CurrentInput=b
 
-al:Set(ap,aA)
+al:Set(as,f)
+if not ai then
+return
+end
 
 
 if ak.Window.NewElements then
@@ -31833,8 +32059,8 @@ al.ThumbSize+8
 ),
 },Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 end
-if ax then
-ax:Open()
+if aA then
+aA:Open()
 end
 
 end
@@ -32146,150 +32372,185 @@ local function NormalizeKeyCode(ak)
 if typeof(ak)=="EnumItem"then
 return ak.Name
 elseif type(ak)=="string"then
+if ak=="MouseLeft"or ak=="MouseLeftButton"then
+return"MouseButton1"
+elseif ak=="MouseRight"or ak=="MouseRightButton"then
+return"MouseButton2"
+end
 return ak
 else
 return"F"
 end
 end
 
-local ak={
+local ak=NormalizeKeyCode(aj.Value)
+local function IsSupportedKey(al)
+return Enum.KeyCode[al]~=nil or al=="MouseButton1"or al=="MouseButton2"
+end
+if not IsSupportedKey(ak)then
+warn("ForktUI Keybind: unsupported initial key '"..tostring(ak).."'; using F")
+ak="F"
+end
+
+local al={
 __type="Keybind",
 Title=aj.Title or"Keybind",
 Desc=aj.Desc or nil,
 Locked=aj.Locked or false,
 LockedTitle=aj.LockedTitle,
-Value=NormalizeKeyCode(aj.Value)or"F",
+Value=ak,
 Callback=aj.Callback or function()end,
 CanChange=aj.CanChange~=false,
-Blacklist=aj.Blacklist or{},
+Blacklist=type(aj.Blacklist)=="table"and aj.Blacklist or{},
 Picking=false,
 UIElements={},
 }
 
-local al={}
+local am={}
+local an={}
 
-for am,an in next,ak.Blacklist do
-table.insert(al,Enum.KeyCode[NormalizeKeyCode(an)])
+for ao,ap in next,al.Blacklist do
+local aq=NormalizeKeyCode(ap)
+local ar=Enum.KeyCode[aq]
+if ar then
+table.insert(am,ar)
+elseif aq=="MouseButton1"or aq=="MouseLeft"or aq=="MouseLeftButton"then
+table.insert(an,"MouseButton1")
+elseif aq=="MouseButton2"or aq=="MouseRight"or aq=="MouseRightButton"then
+table.insert(an,"MouseButton2")
+else
+warn("ForktUI Keybind: ignored invalid blacklist entry '"..tostring(ap).."'")
 end
-table.insert(al,Enum.KeyCode[NormalizeKeyCode"Escape"])
+end
+table.insert(am,Enum.KeyCode.Escape)
 
-local am=true
 
-ak.KeybindFrame=a.load'I'{
-Title=ak.Title,
-Desc=ak.Desc,
+local ao=true
+
+al.KeybindFrame=a.load'I'{
+Title=al.Title,
+Desc=al.Desc,
 Parent=aj.Parent,
 TextOffset=85,
-Hover=ak.CanChange,
+Hover=al.CanChange,
 Tab=aj.Tab,
 Index=aj.Index,
 Window=aj.Window,
-ElementTable=ak,
+ElementTable=al,
 ParentConfig=aj,
 Tags=aj.Tags,
 }
 
-ak.UIElements.Keybind=ah(
-ak.Value,
+al.UIElements.Keybind=ah(
+al.Value,
 nil,
-ak.KeybindFrame.UIElements.Main,
+al.KeybindFrame.UIElements.Main,
 nil,
 aj.Window.NewElements and 12 or 10
 )
 
-ak.UIElements.Keybind.Size=
-UDim2.new(0,24+ak.UIElements.Keybind.Frame.Frame.TextLabel.TextBounds.X,0,42)
-ak.UIElements.Keybind.AnchorPoint=Vector2.new(1,0.5)
-ak.UIElements.Keybind.Position=UDim2.new(1,0,0.5,0)
-ak.UIElements.Keybind.Interactable=false
+al.UIElements.Keybind.Size=
+UDim2.new(0,24+al.UIElements.Keybind.Frame.Frame.TextLabel.TextBounds.X,0,42)
+al.UIElements.Keybind.AnchorPoint=Vector2.new(1,0.5)
+al.UIElements.Keybind.Position=UDim2.new(1,0,0.5,0)
+al.UIElements.Keybind.Interactable=false
 
 ae("UIScale",{
-Parent=ak.UIElements.Keybind,
+Parent=al.UIElements.Keybind,
 Scale=0.85,
 })
 
 ad.AddSignal(
-ak.UIElements.Keybind.Frame.Frame.TextLabel:GetPropertyChangedSignal"TextBounds",
+al.UIElements.Keybind.Frame.Frame.TextLabel:GetPropertyChangedSignal"TextBounds",
 function()
-ak.UIElements.Keybind.Size=
-UDim2.new(0,24+ak.UIElements.Keybind.Frame.Frame.TextLabel.TextBounds.X,0,42)
+al.UIElements.Keybind.Size=
+UDim2.new(0,24+al.UIElements.Keybind.Frame.Frame.TextLabel.TextBounds.X,0,42)
 end
 )
 
-function ak.Lock(an)
-ak.Locked=true
-am=false
-return ak.KeybindFrame:Lock(ak.LockedTitle)
+function al.Lock(ap)
+al.Locked=true
+ao=false
+return al.KeybindFrame:Lock(al.LockedTitle)
 end
-function ak.Unlock(an)
-ak.Locked=false
-am=true
-return ak.KeybindFrame:Unlock()
-end
-
-function ak.Set(an,ao)
-local ap=NormalizeKeyCode(ao)
-ak.Value=ap
-ak.UIElements.Keybind.Frame.Frame.TextLabel.Text=ap
+function al.Unlock(ap)
+al.Locked=false
+ao=true
+return al.KeybindFrame:Unlock()
 end
 
-if ak.Locked then
-ak:Lock()
+function al.Set(ap,aq)
+local ar=NormalizeKeyCode(aq)
+if not IsSupportedKey(ar)then
+warn("ForktUI Keybind: unsupported key '"..tostring(ar).."'")
+return false
+end
+al.Value=ar
+al.UIElements.Keybind.Frame.Frame.TextLabel.Text=ar
+return true
 end
 
-local an
+if al.Locked then
+al:Lock()
+end
 
-ad.AddSignal(ak.KeybindFrame.UIElements.Main.MouseButton1Click,function()
-if am then
-if ak.CanChange then
-ak.Picking=true
-ak.UIElements.Keybind.Frame.Frame.TextLabel.Text="..."
+local ap
+
+ad.AddSignal(al.KeybindFrame.UIElements.Main.MouseButton1Click,function()
+if ao then
+if al.CanChange then
+al.Picking=true
+al.UIElements.Keybind.Frame.Frame.TextLabel.Text="..."
 
 
 
-local ao
-ao=ac.InputBegan:Connect(function(ap)
 local aq
+aq=ac.InputBegan:Connect(function(ar)
+local as
 
-if ap.UserInputType==Enum.UserInputType.Keyboard then
-if table.find(al,ap.KeyCode)then
-aq=nil
+if ar.UserInputType==Enum.UserInputType.Keyboard then
+if ar.KeyCode==Enum.KeyCode.Escape then
+al.Picking=false
+al.UIElements.Keybind.Frame.Frame.TextLabel.Text=al.Value
+aq:Disconnect()
+if ap then
+ap:Disconnect()
+ap=nil
+end
+return
+elseif table.find(am,ar.KeyCode)then
 return
 else
-aq=ap.KeyCode.Name
+as=ar.KeyCode.Name
 end
-elseif
-ap.UserInputType==Enum.UserInputType.MouseButton1
-and not table.find(al,"MouseLeftButton")
-then
-aq="MouseLeftButton"
-elseif
-ap.UserInputType==Enum.UserInputType.MouseButton2
-and not table.find(al,"MouseRightButton")
-then
-aq="MouseRightButton"
+elseif ar.UserInputType==Enum.UserInputType.MouseButton1
+and not table.find(an,"MouseButton1")then
+as="MouseButton1"
+elseif ar.UserInputType==Enum.UserInputType.MouseButton2
+and not table.find(an,"MouseButton2")then
+as="MouseButton2"
 end
 
-if an then
-an:Disconnect()
+if ap then
+ap:Disconnect()
 end
 
-an=ac.InputEnded:Connect(function(ar)
+ap=ac.InputEnded:Connect(function(at)
 if
-aq
+as
 and(
-ar.KeyCode.Name==aq
-or aq=="MouseLeft"and ar.UserInputType==Enum.UserInputType.MouseButton1
-or aq=="MouseRight"and ar.UserInputType==Enum.UserInputType.MouseButton2
+at.KeyCode.Name==as
+or as=="MouseButton1"and at.UserInputType==Enum.UserInputType.MouseButton1
+or as=="MouseButton2"and at.UserInputType==Enum.UserInputType.MouseButton2
 )
 then
-ak.Picking=false
+al.Picking=false
 
-ak.UIElements.Keybind.Frame.Frame.TextLabel.Text=aq
-ak.Value=aq
+al.UIElements.Keybind.Frame.Frame.TextLabel.Text=as
+al.Value=as
 
-ao:Disconnect()
-an:Disconnect()
+aq:Disconnect()
+ap:Disconnect()
 end
 end)
 end)
@@ -32297,29 +32558,29 @@ end
 end
 end)
 
-ad.AddSignal(ac.InputBegan,function(ao,ap)
+ad.AddSignal(ac.InputBegan,function(aq,ar)
 if ac:GetFocusedTextBox()then
 return
 end
-if not am then
+if not ao then
 return
 end
-if ak.Picking then
+if al.Picking then
 return
 end
 
-if ao.UserInputType==Enum.UserInputType.Keyboard then
-if ao.KeyCode.Name==ak.Value then
-ad.SafeCallback(ak.Callback,ao.KeyCode.Name)
+if aq.UserInputType==Enum.UserInputType.Keyboard then
+if aq.KeyCode.Name==al.Value then
+ad.SafeCallback(al.Callback,aq.KeyCode.Name)
 end
-elseif ao.UserInputType==Enum.UserInputType.MouseButton1 and ak.Value=="MouseLeft"then
-ad.SafeCallback(ak.Callback,"MouseLeft")
-elseif ao.UserInputType==Enum.UserInputType.MouseButton2 and ak.Value=="MouseRight"then
-ad.SafeCallback(ak.Callback,"MouseRight")
+elseif aq.UserInputType==Enum.UserInputType.MouseButton1 and al.Value=="MouseButton1"then
+ad.SafeCallback(al.Callback,"MouseButton1")
+elseif aq.UserInputType==Enum.UserInputType.MouseButton2 and al.Value=="MouseButton2"then
+ad.SafeCallback(al.Callback,"MouseButton2")
 end
 end)
 
-return ak.__type,ak
+return al.__type,al
 end
 
 return ag end function a.R()
@@ -35745,6 +36006,16 @@ Viewport=a.load'ae',
 
 },
 Load=function(aa,af,ai,ak,al,am,an,ao,ap)
+local function removeByIdentity(aq,ar)
+for as=#aq,1,-1 do
+if aq[as]==ar then
+table.remove(aq,as)
+return as
+end
+end
+return nil
+end
+
 for aq,ar in next,ai do
 aa[aq]=function(as,at)
 at=at or{}
@@ -35753,6 +36024,7 @@ at.ParentType=aa.__type
 at.ParentTable=aa
 at.Index=#aa.Elements+1
 at.GlobalIndex=#ak.AllElements+1
+at.TabIndex=ap and ap~=aa and(#ap.Elements+1)or nil
 at.Parent=af
 at.Window=ak
 at.ForktUI=al
@@ -35803,7 +36075,7 @@ end
 end
 
 if aw then
-av.ElementFrame=aw.UIElements.Main
+av.ElementFrame=aw.UIElements and aw.UIElements.Main or av.ElementFrame
 function av.SetTitle(ax,ay)
 return aw.SetTitle and aw:SetTitle(ay)
 end
@@ -35817,22 +36089,60 @@ function av.SetThumbnail(ax,ay,az)
 return aw.SetThumbnail and aw:SetThumbnail(ay,az)
 end
 function av.Highlight(ax)
+if aw.Highlight then
 aw:Highlight()
 end
-function av.Destroy(ax)
-aw:Destroy()
+end
+end
 
-table.remove(ak.AllElements,at.GlobalIndex)
-table.remove(aa.Elements,at.Index)
-table.remove(ap.Elements,at.Index)
+local ax=av.Destroy
+function av.Destroy(ay)
+if ay.__ForktUIDestroyed then
+return
+end
+ay.__ForktUIDestroyed=true
+
+
+if type(ay.Elements)=="table"then
+for az=#ay.Elements,1,-1 do
+local aA=ay.Elements[az]
+if type(aA)=="table"and type(aA.Destroy)=="function"then
+pcall(aA.Destroy,aA)
+end
+end
+end
+
+if type(ax)=="function"then
+local az,aA=pcall(ax,ay)
+if not az then
+warn("ForktUI: element cleanup failed:",aA)
+end
+elseif aw and type(aw.Destroy)=="function"then
+pcall(aw.Destroy,aw)
+else
+local az=ay.ElementFrame
+if az and type(az.Destroy)=="function"then
+pcall(az.Destroy,az)
+end
+end
+
+removeByIdentity(ak.AllElements,ay)
+removeByIdentity(aa.Elements,ay)
+if ap and ap~=aa then
+removeByIdentity(ap.Elements,ay)
+end
+if aa.UpdateAllElementShapes then
 aa:UpdateAllElementShapes(aa)
 end
 end
 
-ak.AllElements[at.Index]=av
-aa.Elements[at.Index]=av
-if ap then
-ap.Elements[at.Index]=av
+
+
+
+table.insert(ak.AllElements,at.GlobalIndex,av)
+table.insert(aa.Elements,at.Index,av)
+if ap and ap~=aa then
+table.insert(ap.Elements,at.TabIndex,av)
 end
 
 if ak.NewElements then
@@ -35933,10 +36243,10 @@ Elements={},
 ContainerFrame=nil,
 UICorner=Window.UICorner-(Window.UIPadding/2),
 
-Gap=Window.NewElements and 1 or 6,
+Gap=6,
 
-TabPaddingX=4+(Window.UIPadding/2),
-TabPaddingY=3+(Window.UIPadding/2),
+TabPaddingX=8+(Window.UIPadding/3),
+TabPaddingY=7+(Window.UIPadding/4),
 TitlePaddingY=0,
 }
 
@@ -36002,9 +36312,19 @@ ImageColor3="Text",
 ImageTransparency=1,
 Name="Frame",
 },{
+al("Frame",{
+Name="SelectionRail",
+Size=UDim2.new(0,3,0,18),
+Position=UDim2.new(0,0,0.5,0),
+AnchorPoint=Vector2.new(0,0.5),
+BackgroundTransparency=0,
+Visible=false,
+ThemeTag={BackgroundColor3="Primary"},
+ZIndex=4,
+},{al("UICorner",{CornerRadius=UDim.new(1,0)})}),
 al("UIListLayout",{
 SortOrder="LayoutOrder",
-Padding=UDim.new(0,2+(Window.UIPadding/2)),
+Padding=UDim.new(0,8),
 FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
@@ -36040,6 +36360,9 @@ PaddingBottom=UDim.new(0,ar.TabPaddingY),
 }),
 },true)
 
+
+ar.UIElements.Main.Frame.TextLabel.Size=UDim2.new(1,-11,0,0)
+
 local at=0
 local au
 local av
@@ -36063,7 +36386,7 @@ if not ar.IconShape then
 au.Parent=ar.UIElements.Main.Frame
 ar.UIElements.Icon=au
 au.ImageLabel.ImageTransparency=not ar.Locked and 0 or 0.7
-at=-18-(Window.UIPadding/2)
+at=-18-(Window.UIPadding/2)-11
 ar.UIElements.Main.Frame.TextLabel.Size=UDim2.new(1,at,0,0)
 elseif ar.IconColor then
 ak.NewRoundFrame(
@@ -36109,7 +36432,7 @@ au.AnchorPoint=Vector2.new(0.5,0.5)
 au.Position=UDim2.new(0.5,0,0.5,0)
 au.ImageLabel.ImageTransparency=0
 au.ImageLabel.ImageColor3=ak.GetTextColorForHSB(ar.IconColor,0.68)
-at=-28-(Window.UIPadding/2)
+at=-28-(Window.UIPadding/2)-11
 ar.UIElements.Main.Frame.TextLabel.Size=UDim2.new(1,at,0,0)
 end
 
@@ -36472,6 +36795,8 @@ end
 ak.SetThemeTag(as.UIElements.Main.Frame.TextLabel,{
 TextTransparency="TabTextTransparency",
 },0.15)
+local at=as.UIElements.Main.Frame:FindFirstChild"SelectionRail"
+if at then at.Visible=false end
 if as.UIElements.Icon and not as.IconColor then
 ak.SetThemeTag(as.UIElements.Icon.ImageLabel,{
 ImageTransparency="TabIconTransparency",
@@ -36498,20 +36823,22 @@ ImageTransparency="TabIconTransparencyActive",
 },0.15)
 end
 ao.Tabs[aq].Selected=true
+local ar=ao.Tabs[aq].UIElements.Main.Frame:FindFirstChild"SelectionRail"
+if ar then ar.Visible=true end
 
 task.spawn(function()
-for ar,as in next,ao.Containers do
-as.AnchorPoint=Vector2.new(0,0.05)
-as.Visible=false
+for as,at in next,ao.Containers do
+at.AnchorPoint=Vector2.new(0,0.05)
+at.Visible=false
 end
 ao.Containers[aq].Visible=true
-local ar=game:GetService"TweenService"
+local as=game:GetService"TweenService"
 
-local as=TweenInfo.new(0.15,Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
-local at=ar:Create(ao.Containers[aq],as,{
+local at=TweenInfo.new(0.15,Enum.EasingStyle.Quart,Enum.EasingDirection.Out)
+local au=as:Create(ao.Containers[aq],at,{
 AnchorPoint=Vector2.new(0,0),
 })
-at:Play()
+au:Play()
 end)
 
 ao.OnChangeFunc(aq)
@@ -37285,8 +37612,8 @@ local au=a.load'F'
 
 return function(av)
 local aw={
-Title=av.Title or"UI Library",
-Author=av.Author,
+Title=av.Title or"ForktUI",
+Author=av.Author or"sukitovone",
 Icon=av.Icon,
 IconSize=av.IconSize or 22,
 IconThemed=av.IconThemed,
@@ -37298,24 +37625,27 @@ BackgroundImageTransparency=av.BackgroundImageTransparency or 0,
 ShadowTransparency=av.ShadowTransparency or 0.6,
 User=av.User or{},
 Footer=av.Footer or{},
-Topbar=av.Topbar or{Height=52,ButtonsType="Default"},
+Topbar=type(av.Topbar)=="table"and{
+Height=tonumber(av.Topbar.Height)or 60,
+ButtonsType=av.Topbar.ButtonsType=="Mac"and"Mac"or"Default",
+}or{Height=60,ButtonsType="Default"},
 
 Size=av.Size,
 
-MinSize=av.MinSize or Vector2.new(560,350),
-MaxSize=av.MaxSize or Vector2.new(850,560),
+MinSize=av.MinSize or Vector2.new(540,360),
+MaxSize=av.MaxSize or Vector2.new(960,680),
 
 TopBarButtonIconSize=av.TopBarButtonIconSize,
 
 ToggleKey=av.ToggleKey,
 ElementsRadius=av.ElementsRadius,
-Radius=av.Radius or 16,
+Radius=av.Radius or 14,
 Transparent=av.Transparent or false,
 HideSearchBar=av.HideSearchBar~=false,
 ScrollBarEnabled=av.ScrollBarEnabled or false,
-SideBarWidth=av.SideBarWidth or 200,
+SideBarWidth=av.SideBarWidth or 184,
 Acrylic=av.Acrylic or false,
-NewElements=av.NewElements or false,
+NewElements=av.NewElements~=false,
 IgnoreAlerts=av.IgnoreAlerts or false,
 HidePanelBackground=av.HidePanelBackground or false,
 AutoScale=av.AutoScale~=false,
@@ -37323,8 +37653,8 @@ OpenButton=av.OpenButton,
 DragFrameSize=160,
 
 Position=UDim2.new(0.5,0,0.5,0),
-UICorner=16,
-UIPadding=14,
+UICorner=14,
+UIPadding=16,
 UIElements={},
 CanDropdown=true,
 Closed=false,
@@ -37346,7 +37676,7 @@ OnDestroyCallback=nil,
 
 IsPC=false,
 
-Gap=5,
+Gap=7,
 
 TopBarButtons={},
 AllElements={},
@@ -37364,10 +37694,10 @@ aw.TopBarButtonIconSize=aw.TopBarButtonIconSize or(aw.Topbar.ButtonsType=="Mac"a
 
 aw.ElementConfig={
 UIPadding=(aw.NewElements and 10 or 13),
-UICorner=aw.ElementsRadius or(aw.NewElements and 23 or 16),
+UICorner=aw.ElementsRadius or(aw.NewElements and 12 or 14),
 }
 
-local ax=aw.Size or UDim2.new(0,580,0,460)
+local ax=aw.Size or UDim2.new(0,720,0,520)
 aw.Size=UDim2.new(
 ax.X.Scale,
 math.clamp(ax.X.Offset,aw.MinSize.X,aw.MaxSize.X),
@@ -37375,23 +37705,29 @@ ax.Y.Scale,
 math.clamp(ax.Y.Offset,aw.MinSize.Y,aw.MaxSize.Y)
 )
 
-if aw.Topbar=={}then
-aw.Topbar={Height=52,ButtonsType="Default"}
+local function ensureFolder(ay)
+if
+type(ay)~="string"
+or ay==""
+or type(isfolder)~="function"
+or type(makefolder)~="function"
+then
+return
 end
 
-if not ai:IsStudio()and aw.Folder and writefile then
-if not isfolder("ForktUI/"..aw.Folder)then
-makefolder("ForktUI/"..aw.Folder)
+local az,aA=pcall(isfolder,ay)
+if az and not aA then
+pcall(makefolder,ay)
 end
-if not isfolder("ForktUI/"..aw.Folder.."/assets")then
-makefolder("ForktUI/"..aw.Folder.."/assets")
 end
-if not isfolder(aw.Folder)then
-makefolder(aw.Folder)
-end
-if not isfolder(aw.Folder.."/assets")then
-makefolder(aw.Folder.."/assets")
-end
+
+if not ai:IsStudio()and aw.Folder and type(writefile)=="function"then
+local ay=tostring(aw.Folder)
+ensureFolder"ForktUI"
+ensureFolder("ForktUI/"..ay)
+ensureFolder("ForktUI/"..ay.."/assets")
+ensureFolder(ay)
+ensureFolder(ay.."/assets")
 end
 
 local ay=ao("UICorner",{
@@ -37594,25 +37930,63 @@ end
 
 local f
 if aw.User then
-local function GetUserThumb()local
-g=ak:GetUserThumbnailAsync(
-aw.User.Anonymous and 1 or ak.LocalPlayer.UserId,
+local g="rbxasset://textures/ui/GuiImagePlaceholder.png"
+
+local function GetUserThumb(h)
+local i=tonumber(h)or(ak.LocalPlayer and ak.LocalPlayer.UserId)or 1
+local l,m=pcall(function()local
+l=ak:GetUserThumbnailAsync(
+i,
 Enum.ThumbnailType.HeadShot,
 Enum.ThumbnailSize.Size420x420
 )
-return g
+return l
+end)
+return l and m or"rbxasset://textures/ui/GuiImagePlaceholder.png"
+end
+
+local function RefreshUserThumbnail()
+if not f then
+return
+end
+local h=ak.LocalPlayer
+local i=h and h.UserId
+if aw.User.Anonymous or not i then
+g="rbxasset://textures/ui/GuiImagePlaceholder.png"
+local l=f:FindFirstChild"UserIcon"
+local m=l and l:FindFirstChild"ImageLabel"
+if m then
+m.Image=g
+end
+return
+end
+task.spawn(function()
+local l=GetUserThumb(i)
+g=l
+if f and f.Parent then
+local m=f:FindFirstChild"UserIcon"
+local p=m and m:FindFirstChild"ImageLabel"
+if p then
+p.Image=l
+end
+end
+end)
 end
 
 f=ao("TextButton",{
 Size=UDim2.new(
 0,
-aw.UIElements.SideBarContainer.AbsoluteSize.X-(aw.UIPadding/2),
+math.max(aw.SideBarWidth-aw.UIPadding,0),
 0,
 42+aw.UIPadding
 ),
 Position=UDim2.new(0,aw.UIPadding/2,1,-(aw.UIPadding/2)),
 AnchorPoint=Vector2.new(0,1),
 BackgroundTransparency=1,
+AutoButtonColor=false,
+Selectable=true,
+Text="",
+Name="UserProfileButton",
 Visible=aw.User.Enabled or false,
 },{
 an.NewRoundFrame(aw.UICorner-(aw.UIPadding/2),"SquircleOutline",{
@@ -37646,7 +38020,7 @@ ImageTransparency=1,
 Name="UserIcon",
 },{
 ao("ImageLabel",{
-Image=GetUserThumb(),
+Image="rbxasset://textures/ui/GuiImagePlaceholder.png",
 BackgroundTransparency=1,
 Size=UDim2.new(0,42,0,42),
 ThemeTag={
@@ -37659,7 +38033,8 @@ CornerRadius=UDim.new(1,0),
 }),
 }),
 ao("Frame",{
-AutomaticSize="XY",
+AutomaticSize=Enum.AutomaticSize.Y,
+Size=UDim2.new(1,-58,0,0),
 BackgroundTransparency=1,
 },{
 ao("TextLabel",{
@@ -37671,7 +38046,7 @@ TextColor3="Text",
 FontFace=Font.new(an.Font,Enum.FontWeight.SemiBold),
 AutomaticSize="Y",
 BackgroundTransparency=1,
-Size=UDim2.new(1,-27,0,0),
+Size=UDim2.new(1,0,0,0),
 TextTruncate="AtEnd",
 TextXAlignment="Left",
 Name="DisplayName",
@@ -37686,7 +38061,7 @@ TextColor3="Text",
 FontFace=Font.new(an.Font,Enum.FontWeight.Medium),
 AutomaticSize="Y",
 BackgroundTransparency=1,
-Size=UDim2.new(1,-27,0,0),
+Size=UDim2.new(1,0,0,0),
 TextTruncate="AtEnd",
 TextXAlignment="Left",
 Name="UserName",
@@ -37708,7 +38083,7 @@ PaddingRight=UDim.new(0,aw.UIPadding/2),
 }),
 })
 
-function aw.User.Enable(g)
+function aw.User.Enable(h)
 aw.User.Enabled=true
 ap(
 aw.UIElements.SideBarContainer,
@@ -37719,7 +38094,7 @@ Enum.EasingDirection.Out
 ):Play()
 f.Visible=true
 end
-function aw.User.Disable(g)
+function aw.User.Disable(h)
 aw.User.Enabled=false
 ap(
 aw.UIElements.SideBarContainer,
@@ -37730,14 +38105,19 @@ Enum.EasingDirection.Out
 ):Play()
 f.Visible=false
 end
-function aw.User.SetAnonymous(g,h)
-if h~=false then
-h=true
+function aw.User.SetAnonymous(h,i)
+if type(i)~="boolean"then
+return false,"SetAnonymous expects a boolean"
 end
-aw.User.Anonymous=h
-f.UserIcon.ImageLabel.Image=GetUserThumb()
-f.UserIcon.Frame.DisplayName.Text=h and"Anonymous"or ak.LocalPlayer.DisplayName
-f.UserIcon.Frame.UserName.Text=h and"anonymous"or ak.LocalPlayer.Name
+aw.User.Anonymous=i
+local l=ak.LocalPlayer
+if f and f.Parent then
+local m=f.UserIcon.Frame
+m.DisplayName.Text=i and"Anonymous"or(l and l.DisplayName or"Player")
+m.UserName.Text=i and"anonymous"or(l and l.Name or"player")
+RefreshUserThumbnail()
+end
+return aw.User
 end
 
 if aw.User.Enabled then
@@ -37746,19 +38126,99 @@ else
 aw.User:Disable()
 end
 
-if aw.User.Callback then
-an.AddSignal(f.MouseButton1Click,function()
-aw.User.Callback()
+local function escapeRichText(h)
+return tostring(h or"")
+:gsub("&","&amp;")
+:gsub("<","&lt;")
+:gsub(">","&gt;")
+end
+
+local function ShowUserProfile()
+local h=ak.LocalPlayer
+if not h then
+return
+end
+
+if aw.User.Anonymous then
+av.ForktUI:Popup{
+Title="Anonymous profile",
+Content="Anonymous mode is enabled. Turn it off in Window.User:SetAnonymous(false) to display the local Roblox account profile.",
+Icon="user-round",
+Buttons={
+{Title="Close",Variant="Tertiary"},
+},
+}
+return
+end
+
+local i="https://www.roblox.com/users/"..tostring(h.UserId).."/profile"
+local l="Standard"
+pcall(function()
+l=h.MembershipType.Name
+end)
+
+local m=table.concat({
+"@"..escapeRichText(h.Name),
+"User ID: "..tostring(h.UserId),
+"Account age: "..tostring(h.AccountAge).." days",
+"Membership: "..escapeRichText(l),
+"Profile: "..escapeRichText(i),
+},"\n")
+
+av.ForktUI:Popup{
+Title=escapeRichText(h.DisplayName),
+Content=m,
+Icon="user-round",
+Thumbnail={
+Image=g,
+},
+Buttons={
+{
+Title="Copy profile link",
+Icon="copy",
+Callback=function()
+local p=setclipboard or toclipboard
+if type(p)=="function"then
+local r=pcall(p,i)
+if r then
+av.ForktUI:Notify{Title="Profile link copied",Content="Roblox profile URL copied to clipboard."}
+return
+end
+end
+av.ForktUI:Notify{Title="Roblox profile URL",Content=i,Duration=7}
+end,
+},
+{Title="Close",Variant="Tertiary"},
+},
+}
+end
+
+
+task.defer(RefreshUserThumbnail)
+an.AddSignal(f.Activated,function()
+ShowUserProfile()
+if type(aw.User.Callback)=="function"then
+local h=ak.LocalPlayer
+if aw.User.Anonymous then
+h=nil
+end
+an.SafeCallback(aw.User.Callback,h)
+end
 end)
 an.AddSignal(f.MouseEnter,function()
-ap(f.UserIcon,0.04,{ImageTransparency=0.95}):Play()
-ap(f.Outline,0.04,{ImageTransparency=0.85}):Play()
+ap(f.UserIcon,0.08,{ImageTransparency=0.94}):Play()
+ap(f.Outline,0.08,{ImageTransparency=0.82}):Play()
 end)
-an.AddSignal(f.InputEnded,function()
-ap(f.UserIcon,0.04,{ImageTransparency=1}):Play()
-ap(f.Outline,0.04,{ImageTransparency=1}):Play()
+an.AddSignal(f.MouseLeave,function()
+ap(f.UserIcon,0.08,{ImageTransparency=1}):Play()
+ap(f.Outline,0.08,{ImageTransparency=1}):Play()
 end)
+an.AddSignal(f.InputEnded,function(h)
+if h.UserInputType==Enum.UserInputType.Touch then
+ap(f.UserIcon,0.08,{ImageTransparency=1}):Play()
+ap(f.Outline,0.08,{ImageTransparency=1}):Play()
 end
+end)
 end
 
 local g
@@ -38869,33 +39329,53 @@ function aw.SetCurrentConfig(F,G)
 aw.CurrentConfig=G
 end
 
-do
-local F=40
-local G=al.ViewportSize
-local H=Vector2.new(aw.Size.X.Offset,aw.Size.Y.Offset)
+local function ApplyAutoScale()
+if not aw.AutoScale then
+return
+end
 
-if not aw.IsFullscreen and aw.AutoScale then
-local J=G.X-(F*2)
-local L=G.Y-(F*2)
+local F=workspace.CurrentCamera or al
+if not F then
+return
+end
+al=F
 
-local M=J/H.X
-local N=L/H.Y
+local G=F.ViewportSize
+if G.X<=0 or G.Y<=0 then
+return
+end
 
-local O=math.min(M,N)
+local H=math.clamp(math.min(G.X,G.Y)*0.035,12,32)
+local J=math.max(aw.Size.X.Offset,1)
+local L=math.max(aw.Size.Y.Offset,1)
+local M=math.max(G.X-H*2,1)
+local N=math.max(G.Y-H*2,1)
+local O=math.min(M/J,N/L)
+local P=math.clamp(O,0.3,1)
+local Q=aw:GetUIScale()or 1
 
-local P=0.3
-local Q=1.0
-
-local R=math.clamp(O,P,Q)
-
-local S=aw:GetUIScale()or 1
-local T=0.05
-
-if math.abs(R-S)>T then
-aw:SetUIScale(R)
+if math.abs(P-Q)>0.025 then
+aw:SetUIScale(P)
 end
 end
+
+local F
+local function BindCamera(G)
+if F then
+F:Disconnect()
+F=nil
 end
+al=G
+if G then
+F=an.AddSignal(G:GetPropertyChangedSignal"ViewportSize",ApplyAutoScale)
+end
+ApplyAutoScale()
+end
+
+an.AddSignal(workspace:GetPropertyChangedSignal"CurrentCamera",function()
+BindCamera(workspace.CurrentCamera)
+end)
+BindCamera(workspace.CurrentCamera or al)
 
 if aw.OpenButtonMain and aw.OpenButtonMain.Button then
 an.AddSignal(aw.OpenButtonMain.Button.TextButton.MouseButton1Click,function()
@@ -38905,13 +39385,13 @@ aw:Open()
 end)
 end
 
-an.AddSignal(af.InputBegan,function(F,G)
-if G then
+an.AddSignal(af.InputBegan,function(G,H)
+if H then
 return
 end
 
 if aw.ToggleKey then
-if F.KeyCode==aw.ToggleKey then
+if G.KeyCode==aw.ToggleKey then
 aw:Toggle()
 end
 end
@@ -38922,35 +39402,35 @@ task.spawn(function()
 aw:Open()
 end)
 
-function aw.EditOpenButton(F,G)
-return aw.OpenButtonMain:Edit(G)
+function aw.EditOpenButton(G,H)
+return aw.OpenButtonMain:Edit(H)
 end
 
 if aw.OpenButton and typeof(aw.OpenButton)=="table"then
 aw:EditOpenButton(aw.OpenButton)
 end
 
-local F=a.load'ag'
-local G=a.load'ah'
-local H=F.Init(aw,av.ForktUI,av.ForktUI.TooltipGui)
-H:OnChange(function(J)
-aw.CurrentTab=J
+local G=a.load'ag'
+local H=a.load'ah'
+local J=G.Init(aw,av.ForktUI,av.ForktUI.TooltipGui)
+J:OnChange(function(L)
+aw.CurrentTab=L
 end)
 
-aw.TabModule=H
+aw.TabModule=J
 
-function aw.Tab(J,L)
-L.Parent=aw.UIElements.SideBar.Frame
-return H.New(L,av.ForktUI.UIScale)
+function aw.Tab(L,M)
+M.Parent=aw.UIElements.SideBar.Frame
+return J.New(M,av.ForktUI.UIScale)
 end
 
-function aw.SelectTab(J,L)
-H:SelectTab(L)
+function aw.SelectTab(L,M)
+J:SelectTab(M)
 end
 
-function aw.Section(J,L)
-return G.New(
-L,
+function aw.Section(L,M)
+return H.New(
+M,
 aw.UIElements.SideBar.Frame,
 aw.Folder,
 av.ForktUI.UIScale,
@@ -38958,33 +39438,33 @@ aw
 )
 end
 
-function aw.IsResizable(J,L)
-aw.Resizable=L
-aw.CanResize=L
+function aw.IsResizable(L,M)
+aw.Resizable=M
+aw.CanResize=M
 end
 
-function aw.SetPanelBackground(J,L)
-if typeof(L)=="boolean"then
-aw.HidePanelBackground=L
+function aw.SetPanelBackground(L,M)
+if typeof(M)=="boolean"then
+aw.HidePanelBackground=M
 
-aw.UIElements.MainBar.Background.Visible=L
+aw.UIElements.MainBar.Background.Visible=M
 
-if H then
-for M,N in next,H.Containers do
-N.ScrollingFrame.UIPadding.PaddingTop=UDim.new(0,aw.HidePanelBackground and 20 or 10)
-N.ScrollingFrame.UIPadding.PaddingLeft=
+if J then
+for N,O in next,J.Containers do
+O.ScrollingFrame.UIPadding.PaddingTop=UDim.new(0,aw.HidePanelBackground and 20 or 10)
+O.ScrollingFrame.UIPadding.PaddingLeft=
 UDim.new(0,aw.HidePanelBackground and 20 or 10)
-N.ScrollingFrame.UIPadding.PaddingRight=
+O.ScrollingFrame.UIPadding.PaddingRight=
 UDim.new(0,aw.HidePanelBackground and 20 or 10)
-N.ScrollingFrame.UIPadding.PaddingBottom=
+O.ScrollingFrame.UIPadding.PaddingBottom=
 UDim.new(0,aw.HidePanelBackground and 20 or 10)
 end
 end
 end
 end
 
-function aw.Divider(J)
-local L=ao("Frame",{
+function aw.Divider(L)
+local M=ao("Frame",{
 Size=UDim2.new(1,0,0,1),
 Position=UDim2.new(0.5,0,0,0),
 AnchorPoint=Vector2.new(0.5,0),
@@ -38993,110 +39473,110 @@ ThemeTag={
 BackgroundColor3="Text",
 },
 })
-local M=ao("Frame",{
+local N=ao("Frame",{
 Parent=aw.UIElements.SideBar.Frame,
 
 Size=UDim2.new(1,-7,0,5),
 BackgroundTransparency=1,
 },{
-L,
+M,
 })
 
-return M
+return N
 end
 
-local J=a.load'u'
-function aw.Dialog(L,M)
-local N={
-Title=M.Title or"Dialog",
-Width=M.Width or 320,
-Content=M.Content,
-Buttons=M.Buttons or{},
+local L=a.load'u'
+function aw.Dialog(M,N)
+local O={
+Title=N.Title or"Dialog",
+Width=N.Width or 320,
+Content=N.Content,
+Buttons=N.Buttons or{},
 
 TextPadding=14,
 }
-local O=J.Create(false,"Dialog",aw,av.ForktUI,aw.UIElements.Main.Main)
+local P=L.Create(false,"Dialog",aw,av.ForktUI,aw.UIElements.Main.Main)
 
-O.UIElements.Main.Size=UDim2.new(0,N.Width,0,0)
+P.UIElements.Main.Size=UDim2.new(0,O.Width,0,0)
 
-local P=ao("Frame",{
+local Q=ao("Frame",{
 Size=UDim2.new(1,0,1,0),
 AutomaticSize="Y",
 BackgroundTransparency=1,
-Parent=O.UIElements.Main,
+Parent=P.UIElements.Main,
 },{
 ao("UIListLayout",{
 FillDirection="Vertical",
 
-Padding=UDim.new(0,O.UIPadding),
+Padding=UDim.new(0,P.UIPadding),
 }),
 })
 
-local Q=ao("Frame",{
+local R=ao("Frame",{
 Size=UDim2.new(1,0,0,0),
 AutomaticSize="Y",
 BackgroundTransparency=1,
-Parent=P,
+Parent=Q,
 },{
 ao("UIListLayout",{
 FillDirection="Horizontal",
-Padding=UDim.new(0,O.UIPadding),
+Padding=UDim.new(0,P.UIPadding),
 VerticalAlignment="Center",
 }),
 ao("UIPadding",{
-PaddingTop=UDim.new(0,N.TextPadding/2),
-PaddingLeft=UDim.new(0,N.TextPadding/2),
-PaddingRight=UDim.new(0,N.TextPadding/2),
+PaddingTop=UDim.new(0,O.TextPadding/2),
+PaddingLeft=UDim.new(0,O.TextPadding/2),
+PaddingRight=UDim.new(0,O.TextPadding/2),
 }),
 })
 
-local R
-if M.Icon then
-R=an.Image(
-M.Icon,
-N.Title..":"..M.Icon,
+local S
+if N.Icon then
+S=an.Image(
+N.Icon,
+O.Title..":"..N.Icon,
 0,
 aw,
 "Dialog",
 true,
-M.IconThemed
+N.IconThemed
 )
-R.Size=UDim2.new(0,22,0,22)
-R.Parent=Q
+S.Size=UDim2.new(0,22,0,22)
+S.Parent=R
 end
 
-O.UIElements.UIListLayout=ao("UIListLayout",{
+P.UIElements.UIListLayout=ao("UIListLayout",{
 Padding=UDim.new(0,12),
 FillDirection="Vertical",
 HorizontalAlignment="Left",
 VerticalFlex="SpaceBetween",
-Parent=O.UIElements.Main,
+Parent=P.UIElements.Main,
 })
 
 ao("UISizeConstraint",{
 MinSize=Vector2.new(180,20),
 MaxSize=Vector2.new(400,math.huge),
-Parent=O.UIElements.Main,
+Parent=P.UIElements.Main,
 })
 
-O.UIElements.Title=ao("TextLabel",{
-Text=N.Title,
+P.UIElements.Title=ao("TextLabel",{
+Text=O.Title,
 TextSize=20,
 FontFace=Font.new(an.Font,Enum.FontWeight.SemiBold),
 TextXAlignment="Left",
 TextWrapped=true,
 RichText=true,
-Size=UDim2.new(1,R and-26-O.UIPadding or 0,0,0),
+Size=UDim2.new(1,S and-26-P.UIPadding or 0,0,0),
 AutomaticSize="Y",
 ThemeTag={
 TextColor3="Text",
 },
 BackgroundTransparency=1,
-Parent=Q,
+Parent=R,
 })
-if N.Content then
+if O.Content then
 ao("TextLabel",{
-Text=N.Content,
+Text=O.Content,
 TextSize=18,
 TextTransparency=0.4,
 TextWrapped=true,
@@ -39110,31 +39590,31 @@ ThemeTag={
 TextColor3="Text",
 },
 BackgroundTransparency=1,
-Parent=P,
+Parent=Q,
 },{
 ao("UIPadding",{
-PaddingLeft=UDim.new(0,N.TextPadding/2),
-PaddingRight=UDim.new(0,N.TextPadding/2),
-PaddingBottom=UDim.new(0,N.TextPadding/2),
+PaddingLeft=UDim.new(0,O.TextPadding/2),
+PaddingRight=UDim.new(0,O.TextPadding/2),
+PaddingBottom=UDim.new(0,O.TextPadding/2),
 }),
 })
 end
 
-local S=ao("UIListLayout",{
+local T=ao("UIListLayout",{
 Padding=UDim.new(0,6),
 FillDirection="Horizontal",
 HorizontalAlignment="Center",
 HorizontalFlex="Fill",
 })
 
-local T=ao("Frame",{
+local U=ao("Frame",{
 Size=UDim2.new(1,0,0,36),
 AutomaticSize="None",
 BackgroundTransparency=1,
-Parent=O.UIElements.Main,
+Parent=P.UIElements.Main,
 LayoutOrder=4,
 },{
-S,
+T,
 
 
 
@@ -39143,13 +39623,13 @@ S,
 
 })
 
-local U={}
+local V={}
 
-for V,W in next,N.Buttons do
-local X=
-ar(W.Title,W.Icon,W.Callback,W.Variant,T,O,true)
-table.insert(U,X)
-X.Size=UDim2.new(1,0,1,0)
+for W,X in next,O.Buttons do
+local Y=
+ar(X.Title,X.Icon,X.Callback,X.Variant,U,P,true)
+table.insert(V,Y)
+Y.Size=UDim2.new(1,0,1,0)
 end
 
 
@@ -39204,17 +39684,17 @@ end
 
 
 
-O:Open()
+P:Open()
 
-return O
+return P
 end
 
-local L=false
+local M=false
 
 aw:CreateTopbarButton("Close","x",function()
-if not L then
+if not M then
 if not aw.IgnoreAlerts then
-L=true
+M=true
 
 aw:Dialog{
 
@@ -39225,7 +39705,7 @@ Buttons={
 Title="Cancel",
 
 Callback=function()
-L=false
+M=false
 end,
 Variant="Secondary",
 },
@@ -39233,7 +39713,7 @@ Variant="Secondary",
 Title="Close Window",
 
 Callback=function()
-L=false
+M=false
 aw:Destroy()
 end,
 Variant="Primary",
@@ -39246,29 +39726,29 @@ end
 end
 end,(aw.Topbar.ButtonsType=="Default"and 999 or 997),nil,Color3.fromHex"#F4695F")
 
-function aw.Tag(M,N)
+function aw.Tag(N,O)
 if aw.UIElements.Main.Main.Topbar.Center.Visible==false then
 aw.UIElements.Main.Main.Topbar.Center.Visible=true
 end
-N.Window=aw
-return at:New(N,aw.UIElements.Main.Main.Topbar.Center.Holder)
+O.Window=aw
+return at:New(O,aw.UIElements.Main.Main.Topbar.Center.Holder)
 end
 
-local M=av.ForktUI.GenerateGUID()
+local N=av.ForktUI.GenerateGUID()
 
-local function startResizing(N)
+local function startResizing(O)
 if aw.CanResize then
 isResizing=true
 aB.Active=true
 initialSize=aw.UIElements.Main.Size
-initialInputPosition=N.Position
+initialInputPosition=O.Position
 
 
 ap(az.ImageLabel,0.1,{ImageTransparency=0.35}):Play()
 
-an.AddSignal(N.Changed,function()
-if N.UserInputState==Enum.UserInputState.End then
-if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=M then
+an.AddSignal(O.Changed,function()
+if O.UserInputState==Enum.UserInputState.End then
+if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=N then
 return
 end
 
@@ -39284,49 +39764,49 @@ end)
 end
 end
 
-an.AddSignal(az.InputBegan,function(N)
+an.AddSignal(az.InputBegan,function(O)
 if
-N.UserInputType==Enum.UserInputType.MouseButton1
-or N.UserInputType==Enum.UserInputType.Touch
+O.UserInputType==Enum.UserInputType.MouseButton1
+or O.UserInputType==Enum.UserInputType.Touch
 then
-if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=M then
+if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=N then
 return
 end
-av.ForktUI.CurrentInput=M
+av.ForktUI.CurrentInput=N
 
 if aw.CanResize then
-startResizing(N)
+startResizing(O)
 end
 end
 end)
 
-an.AddSignal(af.InputChanged,function(N)
+an.AddSignal(af.InputChanged,function(O)
 if
-N.UserInputType==Enum.UserInputType.MouseMovement
-or N.UserInputType==Enum.UserInputType.Touch
+O.UserInputType==Enum.UserInputType.MouseMovement
+or O.UserInputType==Enum.UserInputType.Touch
 then
 if isResizing and aw.CanResize then
-local O=N.Position-initialInputPosition
-local P=UDim2.new(0,initialSize.X.Offset+O.X*2,0,initialSize.Y.Offset+O.Y*2)
+local P=O.Position-initialInputPosition
+local Q=UDim2.new(0,initialSize.X.Offset+P.X*2,0,initialSize.Y.Offset+P.Y*2)
 
-P=UDim2.new(
-P.X.Scale,
-math.clamp(P.X.Offset,aw.MinSize.X,aw.MaxSize.X),
-P.Y.Scale,
-math.clamp(P.Y.Offset,aw.MinSize.Y,aw.MaxSize.Y)
+Q=UDim2.new(
+Q.X.Scale,
+math.clamp(Q.X.Offset,aw.MinSize.X,aw.MaxSize.X),
+Q.Y.Scale,
+math.clamp(Q.Y.Offset,aw.MinSize.Y,aw.MaxSize.Y)
 )
 
 ap(aw.UIElements.Main,0.08,{
-Size=P,
+Size=Q,
 },Enum.EasingStyle.Quad,Enum.EasingDirection.Out):Play()
 
-aw.Size=P
+aw.Size=Q
 end
 end
 end)
 
 an.AddSignal(az.MouseEnter,function()
-if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=M then
+if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=N then
 return
 end
 if not isResizing then
@@ -39334,7 +39814,7 @@ ap(az.ImageLabel,0.1,{ImageTransparency=0.35}):Play()
 end
 end)
 an.AddSignal(az.MouseLeave,function()
-if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=M then
+if av.ForktUI.CurrentInput and av.ForktUI.CurrentInput~=N then
 return
 end
 if not isResizing then
@@ -39344,52 +39824,52 @@ end)
 
 
 
-local N=0
-local O=0.4
-local P
-local Q=0
+local O=0
+local P=0.4
+local Q
+local R=0
 
 function onDoubleClick()
 aw:SetToTheCenter()
 end
 
 an.AddSignal(u.Frame.MouseButton1Up,function()
-local R=tick()
-local S=aw.Position
+local S=tick()
+local T=aw.Position
 
-Q=Q+1
+R=R+1
 
-if Q==1 then
-N=R
-P=S
+if R==1 then
+O=S
+Q=T
 
 task.spawn(function()
-task.wait(O)
-if Q==1 then
-Q=0
-P=nil
+task.wait(P)
+if R==1 then
+R=0
+Q=nil
 end
 end)
-elseif Q==2 then
-if R-N<=O and S==P then
+elseif R==2 then
+if S-O<=P and T==Q then
 onDoubleClick()
 end
 
-Q=0
-P=nil
-N=0
+R=0
+Q=nil
+O=0
 else
-Q=1
-N=R
-P=S
+R=1
+O=S
+Q=T
 end
 end)
 
 
 
 if not aw.HideSearchBar then
-local R=a.load'aj'
-local S=false
+local S=a.load'aj'
+local T=false
 
 
 
@@ -39411,18 +39891,18 @@ local S=false
 
 
 
-local T=aq("Search","search",aw.UIElements.SideBarContainer,true)
-T.Size=UDim2.new(1,-aw.UIPadding/2,0,39)
-T.Position=UDim2.new(0,aw.UIPadding/2,0,0)
+local U=aq("Search","search",aw.UIElements.SideBarContainer,true)
+U.Size=UDim2.new(1,-aw.UIPadding/2,0,39)
+U.Position=UDim2.new(0,aw.UIPadding/2,0,0)
 
-an.AddSignal(T.MouseButton1Click,function()
-if S then
+an.AddSignal(U.MouseButton1Click,function()
+if T then
 return
 end
 
-R.new(aw.TabModule,aw.UIElements.Main,function()
+S.new(aw.TabModule,aw.UIElements.Main,function()
 
-S=false
+T=false
 if aw.Resizable then
 aw.CanResize=true
 end
@@ -39433,18 +39913,18 @@ end)
 ap(b,0.1,{ImageTransparency=0.65}):Play()
 b.Active=true
 
-S=true
+T=true
 aw.CanResize=false
 end)
 end
 
 
 
-function aw.DisableTopbarButtons(R,S)
-for T,U in next,S do
-for V,W in next,aw.TopBarButtons do
-if W.Name==U then
-W.Object.Visible=false
+function aw.DisableTopbarButtons(S,T)
+for U,V in next,T do
+for W,X in next,aw.TopBarButtons do
+if X.Name==V then
+X.Object.Visible=false
 end
 end
 end
@@ -39647,7 +40127,7 @@ if aa.TooltipGui then
 aa.TooltipGui.Parent=az
 end
 end
-math.clamp(aa.TransparencyValue,0,1)
+aa.TransparencyValue=math.clamp(aa.TransparencyValue,0,1)
 
 local ay=aa.NotificationModule.Init(aa.NotificationGui)
 
@@ -39693,13 +40173,16 @@ function aa.GetThemes(az)
 return aa.Themes
 end
 function aa.GetCurrentTheme(az)
-return aa.Theme.Name
+local aA=az.Theme or aa.Theme
+return aA and aA.Name or nil
 end
 function aa.GetTransparency(az)
 return aa.Transparent or false
 end
 function aa.GetWindowSize(az)
-return aa.Window.UIElements.Main.Size
+local aA=az and az.Window or aa.Window
+local aB=aA and aA.UIElements and aA.UIElements.Main
+return aB and aB.Size or nil
 end
 function aa.Localization(az,aA)
 return aa.LocalizationModule:New(aA,as)
@@ -39725,54 +40208,100 @@ end
 end
 
 function aa.Gradient(az,aA,aB)
+if type(aA)~="table"then
+error("Gradient: stops must be a table",2)
+end
+
 local b={}
+for d,f in pairs(aA)do
+local g=tonumber(d)
+if g and type(f)=="table"then
+local h=f.Color
+if type(h)=="string"then
+local i=h:gsub("^#","")
+if#i==6 and i:match"^%x+$"then
+h=Color3.fromHex(i)
+end
+end
+
+if typeof(h)=="Color3"then
+local i=math.clamp(g/100,0,1)
+local l=tonumber(f.Transparency)or 0
+b[i]={
+Color=h,
+Transparency=math.clamp(l,0,1),
+}
+end
+end
+end
+
 local d={}
-
-for f,g in next,aA do
-local h=tonumber(f)
-if h then
-h=math.clamp(h/100,0,1)
-
-local i=g.Color
-if typeof(i)=="string"and string.sub(i,1,1)=="#"then
-i=Color3.fromHex(i)
+for f,g in pairs(b)do
+table.insert(d,{
+Position=f,
+Color=g.Color,
+Transparency=g.Transparency,
+})
 end
-
-local l=g.Transparency or 0
-
-table.insert(b,ColorSequenceKeypoint.new(h,i))
-table.insert(d,NumberSequenceKeypoint.new(h,l))
-end
-end
-
-table.sort(b,function(f,g)
-return f.Time<g.Time
-end)
 table.sort(d,function(f,g)
-return f.Time<g.Time
+return f.Position<g.Position
 end)
 
-if#b<2 then
-table.insert(b,ColorSequenceKeypoint.new(1,b[1].Value))
-table.insert(d,NumberSequenceKeypoint.new(1,d[1].Value))
+if#d==0 then
+error("Gradient: at least one valid Color3 stop is required",2)
 end
 
-local f={
-Color=ColorSequence.new(b),
-Transparency=NumberSequence.new(d),
+local f=d[1]
+local g=d[#d]
+if#d==1 then
+d={
+{Position=0,Color=f.Color,Transparency=f.Transparency},
+{Position=1,Color=f.Color,Transparency=f.Transparency},
+}
+else
+if f.Position>0 then
+table.insert(d,1,{
+Position=0,
+Color=f.Color,
+Transparency=f.Transparency,
+})
+end
+if g.Position<1 then
+table.insert(d,{
+Position=1,
+Color=g.Color,
+Transparency=g.Transparency,
+})
+end
+end
+
+local h={}
+local i={}
+for l,m in ipairs(d)do
+table.insert(h,ColorSequenceKeypoint.new(m.Position,m.Color))
+table.insert(i,NumberSequenceKeypoint.new(m.Position,m.Transparency))
+end
+
+local l={
+Color=ColorSequence.new(h),
+Transparency=NumberSequence.new(i),
 }
 
-if aB then
-for g,h in pairs(aB)do
-f[g]=h
+if type(aB)=="table"then
+for m,p in pairs(aB)do
+l[m]=p
 end
 end
 
-return f
+return l
 end
 
 function aa.Popup(az,aA)
-aA.ForktUI=aa
+if type(aA)~="table"then
+error("Popup: configuration must be a table",2)
+end
+
+aA.ForktUI=az or aa
 return a.load'A'.new(aA,aa.ScreenGui.Popups)
 end
 
@@ -39784,16 +40313,33 @@ aa:SetTheme"Dark"
 aa:SetLanguage(as.Language)
 
 function aa.CreateWindow(az,aA)
+if type(aA)~="table"then
+error("CreateWindow: Config must be a table",2)
+end
+
+if aa.Window then
+warn"ForktUI: only one window can be created per library instance"
+return nil
+end
+
 local aB=a.load'ak'
 
-if not am:IsStudio()and writefile then
-if not isfolder"ForktUI"then
-makefolder"ForktUI"
+local function ensureFolder(b)
+if type(b)~="string"or b==""or type(isfolder)~="function"or type(makefolder)~="function"then
+return
 end
-if aA.Folder then
-makefolder(aA.Folder)
-else
-makefolder(aA.Title)
+
+local d,f=pcall(isfolder,b)
+if d and not f then
+pcall(makefolder,b)
+end
+end
+
+if not am:IsStudio()and type(writefile)=="function"then
+ensureFolder"ForktUI"
+ensureFolder(aA.Folder or aA.Title)
+if aA.KeySystem then
+ensureFolder(aA.Folder or"Temp")
 end
 end
 
@@ -39801,41 +40347,74 @@ aA.ForktUI=aa
 aA.Window=aa.Window
 aA.Parent=aa.ScreenGui.Window
 
-if aa.Window then
-warn"You cannot create more than one window"
-return
+if aA.KeySystem~=nil and type(aA.KeySystem)~="table"then
+error("CreateWindow: KeySystem must be a table",2)
+end
+if type(aA.KeySystem)=="table"then
+if aA.KeySystem.API~=nil and type(aA.KeySystem.API)~="table"then
+error("CreateWindow: KeySystem.API must be a table",2)
+end
+if aA.KeySystem.KeyValidator~=nil and type(aA.KeySystem.KeyValidator)~="function"then
+error("CreateWindow: KeySystem.KeyValidator must be a function",2)
+end
+if aA.KeySystem.Key~=nil and type(aA.KeySystem.Key)~="string"and type(aA.KeySystem.Key)~="table"then
+error("CreateWindow: KeySystem.Key must be a string or an array of strings",2)
+end
+if aA.KeySystem.SaveKey~=nil and type(aA.KeySystem.SaveKey)~="boolean"then
+error("CreateWindow: KeySystem.SaveKey must be a boolean",2)
+end
 end
 
 local b=true
+local d=false
 
-local d=aa.Themes[aA.Theme or"Dark"]
-
-
-as.SetTheme(d)
-
-local f=gethwid or function()
-return ak.LocalPlayer.UserId
+local f=aa.Themes[aA.Theme or"Dark"]or aa.Themes.Dark
+if not f then
+error("CreateWindow: no valid theme is available",2)
+end
+if aA.Theme and not aa.Themes[aA.Theme]then
+warn("ForktUI: unknown theme '"..tostring(aA.Theme).."'; falling back to Dark")
 end
 
-local g=f()
+as.SetTheme(f)
+
+local g=ak.LocalPlayer and ak.LocalPlayer.UserId or"local-user"
+if type(gethwid)=="function"then
+local h,i=pcall(gethwid)
+if h and i~=nil then g=i end
+end
+g=tostring(g):gsub("[^%w_%-]","_")
 
 if aA.KeySystem then
 b=false
 
 local function loadKeysystem()
 ar.new(aA,g,function(h)
-b=h
+b=h==true
+d=h~=true
 end)
 end
 
-local h=(aA.Folder or"Temp").."/"..g..".key"
+local h=tostring(aA.Folder or"Temp").."/"..tostring(g)..".key"
+local i
+if type(isfile)=="function"and type(readfile)=="function"then
+local l,m=pcall(isfile,h)
+if l and m then
+local p,r=pcall(readfile,h)
+if p and type(r)=="string"then i=r end
+end
+end
+local l=i~=nil
 
 if aA.KeySystem.KeyValidator then
-if aA.KeySystem.SaveKey and isfile(h)then
-local i=readfile(h)
-local l=aA.KeySystem.KeyValidator(i)
+if aA.KeySystem.SaveKey and l then
+local m,p=pcall(aA.KeySystem.KeyValidator,i)
+if not m then
+warn("ForktUI: saved key validator failed:",p)
+p=false
+end
 
-if l then
+if p==true then
 b=true
 else
 loadKeysystem()
@@ -39843,13 +40422,18 @@ end
 else
 loadKeysystem()
 end
-elseif not aA.KeySystem.API then
-if aA.KeySystem.SaveKey and isfile(h)then
-local i=readfile(h)
-local l=(type(aA.KeySystem.Key)=="table")and table.find(aA.KeySystem.Key,i)
-or tostring(aA.KeySystem.Key)==tostring(i)
+elseif type(aA.KeySystem.API)~="table"or#aA.KeySystem.API==0 then
+if aA.KeySystem.SaveKey and l then
+local m=false
+if type(aA.KeySystem.Key)=="table"then
+for p,r in pairs(aA.KeySystem.Key)do
+if tostring(r)==tostring(i)then m=true;break end
+end
+else
+m=aA.KeySystem.Key~=nil and tostring(aA.KeySystem.Key)==tostring(i)
+end
 
-if l then
+if m then
 b=true
 else
 loadKeysystem()
@@ -39858,29 +40442,29 @@ else
 loadKeysystem()
 end
 else
-if isfile(h)then
-local i=readfile(h)
-local l=false
+if l then
+local m=false
 
-for m,p in next,aA.KeySystem.API do
-local r=aa.Services[p.Type]
-if r then
-local u={}
-for v,x in next,r.Args do
-table.insert(u,p[x])
+for p,r in ipairs(type(aA.KeySystem.API)=="table"and aA.KeySystem.API or{})do
+if type(r)=="table"and type(r.Type)=="string"then
+local u=aa.Services[r.Type]
+if u and type(u.New)=="function"then
+local v={}
+local x=type(u.Args)=="table"and u.Args or{}
+for z,A in ipairs(x)do
+table.insert(v,r[A])
+end
+local z,A=pcall(function()return u.New(table.unpack(v))end)
+if z and type(A)=="table"and type(A.Verify)=="function"then
+local B,C=pcall(A.Verify,i)
+if B and C then m=true;break end
+end
+end
+end
 end
 
-local v=r.New(table.unpack(u))
-local x=v.Verify(i)
-if x then
-l=true
-break
-end
-end
-end
-
-b=l
-if not l then
+b=m
+if not m then
 loadKeysystem()
 end
 else
@@ -39890,7 +40474,10 @@ end
 
 repeat
 task.wait()
-until b
+until b or d
+if d then
+return nil
+end
 end
 
 local h=aB(aA)
