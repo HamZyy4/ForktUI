@@ -13,11 +13,11 @@ local New = Creator.New
 local CreateToolTip = require("../ui/Tooltip").New
 local CreateScrollSlider = require("../ui/ScrollSlider").New
 
-local Window, WindUI, UIScale
+local Window, ForktUI, UIScale
 
 local TabModule = {
 	--Window = nil,
-	--WindUI = nil,
+	--ForktUI = nil,
 	Tabs = {},
 	Containers = {},
 	SelectedTab = nil,
@@ -28,9 +28,9 @@ local TabModule = {
 	OnChangeFunc = function(v) end,
 }
 
-function TabModule.Init(WindowTable, WindUITable, ToolTipParent, TabHighlight)
+function TabModule.Init(WindowTable, ForktUITable, ToolTipParent, TabHighlight)
 	Window = WindowTable
-	WindUI = WindUITable
+	ForktUI = ForktUITable
 	TabModule.ToolTipParent = ToolTipParent
 	TabModule.TabHighlight = TabHighlight
 	return TabModule
@@ -59,10 +59,10 @@ function TabModule.New(Config, UIScale)
 		ContainerFrame = nil,
 		UICorner = Window.UICorner - (Window.UIPadding / 2),
 
-		Gap = Window.NewElements and 1 or 6,
+		Gap = 6,
 
-		TabPaddingX = 4 + (Window.UIPadding / 2),
-		TabPaddingY = 3 + (Window.UIPadding / 2),
+		TabPaddingX = 8 + (Window.UIPadding / 3),
+		TabPaddingY = 7 + (Window.UIPadding / 4),
 		TitlePaddingY = 0,
 	}
 
@@ -128,9 +128,19 @@ function TabModule.New(Config, UIScale)
 			ImageTransparency = 1, -- .95
 			Name = "Frame",
 		}, {
+			New("Frame", {
+				Name = "SelectionRail",
+				Size = UDim2.new(0, 3, 0, 18),
+				Position = UDim2.new(0, 0, 0.5, 0),
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundTransparency = 0,
+				Visible = false,
+				ThemeTag = { BackgroundColor3 = "Primary" },
+				ZIndex = 4,
+				}, { New("UICorner", { CornerRadius = UDim.new(1, 0) }) }),
 			New("UIListLayout", {
 				SortOrder = "LayoutOrder",
-				Padding = UDim.new(0, 2 + (Window.UIPadding / 2)),
+				Padding = UDim.new(0, 8),
 				FillDirection = "Horizontal",
 				VerticalAlignment = "Center",
 			}),
@@ -166,6 +176,9 @@ function TabModule.New(Config, UIScale)
 		}),
 	}, true)
 
+	-- Reserve room for the narrow active-tab rail in the compact sidebar layout.
+	Tab.UIElements.Main.Frame.TextLabel.Size = UDim2.new(1, -11, 0, 0)
+
 	local TextOffset = 0
 	local Icon
 	local Icon2
@@ -189,7 +202,7 @@ function TabModule.New(Config, UIScale)
 			Icon.Parent = Tab.UIElements.Main.Frame
 			Tab.UIElements.Icon = Icon
 			Icon.ImageLabel.ImageTransparency = not Tab.Locked and 0 or 0.7
-			TextOffset = -16 - 2 - (Window.UIPadding / 2)
+			TextOffset = -16 - 2 - (Window.UIPadding / 2) - 11
 			Tab.UIElements.Main.Frame.TextLabel.Size = UDim2.new(1, TextOffset, 0, 0)
 		elseif Tab.IconColor then
 			local _IconBG = Creator.NewRoundFrame(
@@ -235,7 +248,7 @@ function TabModule.New(Config, UIScale)
 			Icon.Position = UDim2.new(0.5, 0, 0.5, 0)
 			Icon.ImageLabel.ImageTransparency = 0
 			Icon.ImageLabel.ImageColor3 = Creator.GetTextColorForHSB(Tab.IconColor, 0.68)
-			TextOffset = -26 - 2 - (Window.UIPadding / 2)
+			TextOffset = -26 - 2 - (Window.UIPadding / 2) - 11
 			Tab.UIElements.Main.Frame.TextLabel.Size = UDim2.new(1, TextOffset, 0, 0)
 		end
 
@@ -359,7 +372,7 @@ function TabModule.New(Config, UIScale)
 			Tab.UIElements.ContainerFrameCanvas.ScrollSliderHolder,
 			Window,
 			4,
-			WindUI
+			ForktUI
 		)
 	end
 
@@ -457,7 +470,7 @@ function TabModule.New(Config, UIScale)
 		Tab.UIElements.ContainerFrame,
 		ElementsModule.Elements,
 		Window,
-		WindUI,
+		ForktUI,
 		nil,
 		ElementsModule,
 		UIScale,
@@ -598,6 +611,8 @@ function TabModule:SelectTab(TabIndex)
 				Creator.SetThemeTag(TabObject.UIElements.Main.Frame.TextLabel, {
 					TextTransparency = "TabTextTransparency",
 				}, 0.15)
+				local rail = TabObject.UIElements.Main.Frame:FindFirstChild("SelectionRail")
+				if rail then rail.Visible = false end
 				if TabObject.UIElements.Icon and not TabObject.IconColor then
 					Creator.SetThemeTag(TabObject.UIElements.Icon.ImageLabel, {
 						ImageTransparency = "TabIconTransparency",
@@ -624,6 +639,8 @@ function TabModule:SelectTab(TabIndex)
 			}, 0.15)
 		end
 		TabModule.Tabs[TabIndex].Selected = true
+		local selectedRail = TabModule.Tabs[TabIndex].UIElements.Main.Frame:FindFirstChild("SelectionRail")
+		if selectedRail then selectedRail.Visible = true end
 
 		task.spawn(function()
 			for _, ContainerObject in next, TabModule.Containers do

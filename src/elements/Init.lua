@@ -20,7 +20,17 @@ return {
 		Viewport = require("./Viewport"),
 		--Video       = require("./Video"),
 	},
-	Load = function(tbl, Container, Elements, Window, WindUI, OnElementCreateFunction, ElementsModule, UIScale, Tab)
+	Load = function(tbl, Container, Elements, Window, ForktUI, OnElementCreateFunction, ElementsModule, UIScale, Tab)
+		local function removeByIdentity(list, target)
+			for index = #list, 1, -1 do
+				if list[index] == target then
+					table.remove(list, index)
+					return index
+				end
+			end
+			return nil
+		end
+
 		for name, module in next, Elements do
 			tbl[name] = function(self, config)
 				config = config or {}
@@ -29,9 +39,10 @@ return {
 				config.ParentTable = tbl
 				config.Index = #tbl.Elements + 1
 				config.GlobalIndex = #Window.AllElements + 1
+				config.TabIndex = Tab and Tab ~= tbl and (#Tab.Elements + 1) or nil
 				config.Parent = Container
 				config.Window = Window
-				config.WindUI = WindUI
+				config.ForktUI = ForktUI
 				config.UIScale = UIScale
 				config.ElementsModule = ElementsModule
 
@@ -55,7 +66,7 @@ return {
 										Window.PendingConfigData[config.Flag] = nil
 									else
 										warn(
-											"[ WindUI ] Failed to apply pending config for '"
+											"[ ForktUI ] Failed to apply pending config for '"
 												.. config.Flag
 												.. "': "
 												.. tostring(err)
@@ -79,7 +90,7 @@ return {
 				end
 
 				if frame then
-					content.ElementFrame = frame.UIElements.Main
+					content.ElementFrame = frame.UIElements and frame.UIElements.Main or content.ElementFrame
 					function content:SetTitle(title)
 						return frame.SetTitle and frame:SetTitle(title)
 					end
@@ -93,22 +104,60 @@ return {
 						return frame.SetThumbnail and frame:SetThumbnail(image, size)
 					end
 					function content:Highlight()
-						frame:Highlight()
+						if frame.Highlight then
+							frame:Highlight()
+						end
 					end
-					function content:Destroy()
-						frame:Destroy()
+				end
 
-						table.remove(Window.AllElements, config.GlobalIndex)
-						table.remove(tbl.Elements, config.Index)
-						table.remove(Tab.Elements, config.Index)
+				local originalDestroy = content.Destroy
+				function content:Destroy()
+					if self.__ForktUIDestroyed then
+						return
+					end
+					self.__ForktUIDestroyed = true
+
+					-- Group-like elements own child controls; clean those registries too.
+					if type(self.Elements) == "table" then
+						for index = #self.Elements, 1, -1 do
+							local child = self.Elements[index]
+							if type(child) == "table" and type(child.Destroy) == "function" then
+								pcall(child.Destroy, child)
+							end
+						end
+					end
+
+					if type(originalDestroy) == "function" then
+						local ok, err = pcall(originalDestroy, self)
+						if not ok then
+							warn("ForktUI: element cleanup failed:", err)
+						end
+					elseif frame and type(frame.Destroy) == "function" then
+						pcall(frame.Destroy, frame)
+					else
+						local visual = self.ElementFrame
+						if visual and type(visual.Destroy) == "function" then
+							pcall(visual.Destroy, visual)
+						end
+					end
+
+					removeByIdentity(Window.AllElements, self)
+					removeByIdentity(tbl.Elements, self)
+					if Tab and Tab ~= tbl then
+						removeByIdentity(Tab.Elements, self)
+					end
+					if tbl.UpdateAllElementShapes then
 						tbl:UpdateAllElementShapes(tbl)
 					end
 				end
 
-				Window.AllElements[config.Index] = content
-				tbl.Elements[config.Index] = content
-				if Tab then
-					Tab.Elements[config.Index] = content
+				-- Parent containers create their nested controls inside module:New().
+				-- Insert the parent at its original position afterwards so it does not
+				-- overwrite a child or appear after its own descendants.
+				table.insert(Window.AllElements, config.GlobalIndex, content)
+				table.insert(tbl.Elements, config.Index, content)
+				if Tab and Tab ~= tbl then
+					table.insert(Tab.Elements, config.TabIndex, content)
 				end
 
 				if Window.NewElements then

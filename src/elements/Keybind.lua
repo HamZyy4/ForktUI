@@ -20,10 +20,24 @@ function Element:New(Config)
 		if typeof(value) == "EnumItem" then
 			return value.Name
 		elseif type(value) == "string" then
+			if value == "MouseLeft" or value == "MouseLeftButton" then
+				return "MouseButton1"
+			elseif value == "MouseRight" or value == "MouseRightButton" then
+				return "MouseButton2"
+			end
 			return value
 		else
 			return "F"
 		end
+	end
+
+	local initialValue = NormalizeKeyCode(Config.Value)
+	local function IsSupportedKey(value)
+		return Enum.KeyCode[value] ~= nil or value == "MouseButton1" or value == "MouseButton2"
+	end
+	if not IsSupportedKey(initialValue) then
+		warn("ForktUI Keybind: unsupported initial key '" .. tostring(initialValue) .. "'; using F")
+		initialValue = "F"
 	end
 
 	local Keybind = {
@@ -32,20 +46,32 @@ function Element:New(Config)
 		Desc = Config.Desc or nil,
 		Locked = Config.Locked or false,
 		LockedTitle = Config.LockedTitle,
-		Value = NormalizeKeyCode(Config.Value) or "F",
+		Value = initialValue,
 		Callback = Config.Callback or function() end,
 		CanChange = Config.CanChange ~= false,
-		Blacklist = Config.Blacklist or {},
+		Blacklist = type(Config.Blacklist) == "table" and Config.Blacklist or {},
 		Picking = false,
 		UIElements = {},
 	}
 
 	local FilteredBlacklist = {}
+	local BlacklistedMouse = {}
 
 	for _, Item in next, Keybind.Blacklist do
-		table.insert(FilteredBlacklist, Enum.KeyCode[NormalizeKeyCode(Item)])
+		local normalized = NormalizeKeyCode(Item)
+		local keyCode = Enum.KeyCode[normalized]
+		if keyCode then
+			table.insert(FilteredBlacklist, keyCode)
+		elseif normalized == "MouseButton1" or normalized == "MouseLeft" or normalized == "MouseLeftButton" then
+			table.insert(BlacklistedMouse, "MouseButton1")
+		elseif normalized == "MouseButton2" or normalized == "MouseRight" or normalized == "MouseRightButton" then
+			table.insert(BlacklistedMouse, "MouseButton2")
+		else
+			warn("ForktUI Keybind: ignored invalid blacklist entry '" .. tostring(Item) .. "'")
+		end
 	end
-	table.insert(FilteredBlacklist, Enum.KeyCode[NormalizeKeyCode("Escape")])
+	table.insert(FilteredBlacklist, Enum.KeyCode.Escape)
+
 
 	local CanCallback = true
 
@@ -103,8 +129,13 @@ function Element:New(Config)
 
 	function Keybind:Set(v)
 		local normalizedValue = NormalizeKeyCode(v)
+		if not IsSupportedKey(normalizedValue) then
+			warn("ForktUI Keybind: unsupported key '" .. tostring(normalizedValue) .. "'")
+			return false
+		end
 		Keybind.Value = normalizedValue
 		Keybind.UIElements.Keybind.Frame.Frame.TextLabel.Text = normalizedValue
+		return true
 	end
 
 	if Keybind.Locked then
@@ -126,22 +157,26 @@ function Element:New(Config)
 					local Key
 
 					if Input.UserInputType == Enum.UserInputType.Keyboard then
-						if table.find(FilteredBlacklist, Input.KeyCode) then
-							Key = nil
+						if Input.KeyCode == Enum.KeyCode.Escape then
+							Keybind.Picking = false
+							Keybind.UIElements.Keybind.Frame.Frame.TextLabel.Text = Keybind.Value
+							Event:Disconnect()
+							if EndedEvent then
+								EndedEvent:Disconnect()
+								EndedEvent = nil
+							end
+							return
+						elseif table.find(FilteredBlacklist, Input.KeyCode) then
 							return
 						else
 							Key = Input.KeyCode.Name
 						end
-					elseif
-						Input.UserInputType == Enum.UserInputType.MouseButton1
-						and not table.find(FilteredBlacklist, "MouseLeftButton")
-					then
-						Key = "MouseLeftButton"
-					elseif
-						Input.UserInputType == Enum.UserInputType.MouseButton2
-						and not table.find(FilteredBlacklist, "MouseRightButton")
-					then
-						Key = "MouseRightButton"
+					elseif Input.UserInputType == Enum.UserInputType.MouseButton1
+						and not table.find(BlacklistedMouse, "MouseButton1") then
+						Key = "MouseButton1"
+					elseif Input.UserInputType == Enum.UserInputType.MouseButton2
+						and not table.find(BlacklistedMouse, "MouseButton2") then
+						Key = "MouseButton2"
 					end
 
 					if EndedEvent then
@@ -153,8 +188,8 @@ function Element:New(Config)
 							Key
 							and (
 								Input.KeyCode.Name == Key
-								or Key == "MouseLeft" and Input.UserInputType == Enum.UserInputType.MouseButton1
-								or Key == "MouseRight" and Input.UserInputType == Enum.UserInputType.MouseButton2
+								or Key == "MouseButton1" and Input.UserInputType == Enum.UserInputType.MouseButton1
+								or Key == "MouseButton2" and Input.UserInputType == Enum.UserInputType.MouseButton2
 							)
 						then
 							Keybind.Picking = false
@@ -186,10 +221,10 @@ function Element:New(Config)
 			if input.KeyCode.Name == Keybind.Value then
 				Creator.SafeCallback(Keybind.Callback, input.KeyCode.Name)
 			end
-		elseif input.UserInputType == Enum.UserInputType.MouseButton1 and Keybind.Value == "MouseLeft" then
-			Creator.SafeCallback(Keybind.Callback, "MouseLeft")
-		elseif input.UserInputType == Enum.UserInputType.MouseButton2 and Keybind.Value == "MouseRight" then
-			Creator.SafeCallback(Keybind.Callback, "MouseRight")
+		elseif input.UserInputType == Enum.UserInputType.MouseButton1 and Keybind.Value == "MouseButton1" then
+			Creator.SafeCallback(Keybind.Callback, "MouseButton1")
+		elseif input.UserInputType == Enum.UserInputType.MouseButton2 and Keybind.Value == "MouseButton2" then
+			Creator.SafeCallback(Keybind.Callback, "MouseButton2")
 		end
 	end)
 

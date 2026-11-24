@@ -1,39 +1,56 @@
-<!--<h1 align="center">WindUI</h1> -->
+<div align="center">
 
-<!--
-<picture>
-    <source srcset="docs/banner-dark.webp" media="(prefers-color-scheme: dark)">
-    <source srcset="docs/banner-light.webp" media="(prefers-color-scheme: light)">
-    <img src="docs/banner-light.webp" alt="WindUI Banner">
-</picture>-->
+# ForktUI
 
-<img src="docs/WindUI – Themes.png" alt="WindUI Banner">
+**A graphite-first interface library for Roblox experiences.**
 
-I might rewrite this project from scratch later.
+[Library](https://github.com/HamZyy4/ForktUI) · [Documentation](https://hamzyy4.github.io/ForktUI-Docs) · [Icons](https://github.com/HamZyy4/Icons)
 
-> [!WARNING]
-> This WindUI was not inspired by, and the name has nothing to do with UI Frameworks
+Maintainer: **sukitovone**
 
-> [!WARNING]
-> WindUI is currently in Beta.
-> This project is still under active development. Bugs, issues, and unstable features may occur. We’re constantly working on improvements, so please be patient and report any problems you encounter.
+</div>
 
-## Credits
+## Overview
 
-#### Icons (https://github.com/Footagesus/Icons)
+ForktUI provides a modular Luau interface toolkit with a compact window shell, sidebar navigation, controls, dialogs, notifications, configurable themes, and icon packs. The default visual system uses graphite surfaces, muted contrast, restrained borders, and a narrow active-tab rail.
 
-- [Lucide-Icons](https://github.com/lucide-icons/lucide)
-- [Craft Icons](https://www.figma.com/community/file/1415718327120418204)
-- [Geist Icons](https://vercel.com/geist/icons)
-- [Solar Icons](https://icones.js.org/collection/solar)
-- [SF Symbols](https://sf-symbols-one.vercel.app/)
+## Load the library
 
-### Links
+```lua
+local ForktUI = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/HamZyy4/ForktUI/main/dist/main.lua"
+))()
 
-- [Discord Server](https://discord.gg/ftgs-development-hub-1300692552005189632)
-- [Documentation](https://footagesus.github.io/treehub-web/docs/windui)
-- [Installation](https://footagesus.github.io/WindUI-Docs/docs/installation)
-- [Example](/main_example.lua) (wip)
-    ```luau
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/main_example.lua'))()
-    ```
+local Window = ForktUI:CreateWindow({
+    Title = "My Hub",
+    Author = "sukitovone",
+    Theme = "Dark",
+})
+```
+
+## Example
+
+The repository contains one maintained end-to-end example: [`examples/full-example.client.lua`](examples/full-example.client.lua). It demonstrates window creation, tabs, sections, common controls, theme changes, notifications, dialogs, keybinds, and configuration.
+
+## Development
+
+```bash
+npm install
+aftman install
+npm run build
+```
+
+The build requires the tools pinned in `aftman.toml`. GitHub Actions rebuilds `dist/main.lua` after pushes to `main`. Review the build workflow result before using the raw distribution URL.
+
+## Key system
+
+Key validation supports a static key, a custom `KeyValidator` callback, or configured service adapters. Saved keys use guarded filesystem calls and are revalidated when the library starts. Client-side keys are not secret; use a server-backed validation service for sensitive access control.
+
+## Companion repositories
+
+- [ForktUI documentation](https://github.com/HamZyy4/ForktUI-Docs)
+- [ForktUI icon packs](https://github.com/HamZyy4/Icons)
+
+## License and notices
+
+ForktUI is distributed under the terms in [`LICENSE`](LICENSE). See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for retained upstream and icon-pack attribution.

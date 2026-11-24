@@ -12,10 +12,9 @@ updater
 dist-ssr
 *.local
 .env
-.env.example
 
 sourcemap.json
-src/server/
+src/server/*
 
 build/.init.lua
 

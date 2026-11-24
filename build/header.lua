@@ -1,15 +1,13 @@
 --[[
-     _      ___         ____  ______
-    | | /| / (_)__  ___/ / / / /  _/
-    | |/ |/ / / _ \/ _  / /_/ // /  
-    |__/|__/_/_//_/\_,_/\____/___/
-    
-    v{{VERSION}}  |  {{BUILD_DATE}}  |  {{DESCRIPTION}}
-    
-    To view the source code, see the `src/` folder on the official GitHub repository.
-    
-    Author: Footagesus (Footages, .ftgs, oftgs)
-    Github: {{REPOSITORY}}
-    Discord: {{DISCORD}}
-    License: {{LICENSE}}
+  ______          __    __  __  __
+ / __/ /____ ____/ /__ / /_/ / / /
+/ _// __/ -_) __/  '_// __/ /_/ /
+/_/  \\__/\\__/_/ /_/\\_\\__/\\____/
+
+  ForktUI v{{VERSION}} | {{BUILD_DATE}}
+  {{DESCRIPTION}}
+
+  Open source repository: {{REPOSITORY}}
+  License: {{LICENSE}}
+  Maintained by sukitovone; third-party notices and license terms remain in LICENSE.
 ]]

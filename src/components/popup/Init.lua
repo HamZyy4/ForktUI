@@ -12,13 +12,13 @@ function PopupModule.new(PopupConfig, Parent)
         Icon = PopupConfig.Icon,
         IconThemed = PopupConfig.IconThemed,
         Thumbnail = PopupConfig.Thumbnail,
-        Buttons = PopupConfig.Buttons,
+        Buttons = type(PopupConfig.Buttons) == "table" and PopupConfig.Buttons or {},
         
         IconSize = 22,
     }
     
     local DialogInit = require("../window/Dialog")
-    local Dialog = DialogInit.Create(true, "Popup", PopupConfig.WindUI.Window, PopupConfig.WindUI, Parent)
+    local Dialog = DialogInit.Create(true, "Popup", PopupConfig.ForktUI.Window, PopupConfig.ForktUI, Parent)
     
     local ThumbnailSize = 200
     
@@ -39,7 +39,7 @@ function PopupModule.new(PopupConfig, Parent)
             Popup.Icon,
             Popup.Title .. ":" .. Popup.Icon,
             0,
-            PopupConfig.WindUI.Window,
+            PopupConfig.ForktUI.Window,
             "Popup",
             true,
             PopupConfig.IconThemed,

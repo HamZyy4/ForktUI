@@ -1,5 +1,5 @@
 -- Credits: https://devforum.roblox.com/t/realtime-richtext-lua-syntax-highlighting/2500399
--- Modified by me (Footagesus)
+-- Syntax highlighting module retained from the original MIT-licensed upstream source.
 
 local highlighter = {}
 local keywords = {

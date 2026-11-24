@@ -1,31 +1,37 @@
-return function(WindUI, Creator)
+return function(ForktUI, Creator)
 	return {
 		Dark = {
 			Name = "Dark",
 
-			Accent = Color3.fromHex("#18181b"),
-			Dialog = Color3.fromHex("#1a1a1a"),
-			Outline = Color3.fromHex("#FFFFFF"),
-			Text = Color3.fromHex("#FFFFFF"),
-			Placeholder = Color3.fromHex("#a1a1a1"),
-			Background = Color3.fromHex("#101010"),
-			Button = Color3.fromHex("#52525b"),
-			Icon = Color3.fromHex("#a1a1aa"),
-			Toggle = Color3.fromHex("#33C759"),
-			Slider = Color3.fromHex("#0091FF"),
-			Checkbox = Color3.fromHex("#0091FF"),
+			-- ForktUI's default graphite palette: quiet contrast, neutral controls,
+			-- and separate surface levels for the window, dialogs, and elements.
+			Accent = Color3.fromHex("#252A32"),
+			Dialog = Color3.fromHex("#171B21"),
+			Outline = Color3.fromHex("#818A98"),
+			Text = Color3.fromHex("#F2F3F5"),
+			Placeholder = Color3.fromHex("#9299A4"),
+			Background = Color3.fromHex("#0B0D11"),
+			Button = Color3.fromHex("#414955"),
+			Icon = Color3.fromHex("#B6BDC7"),
+			Toggle = Color3.fromHex("#B3BAC5"),
+			Slider = Color3.fromHex("#B3BAC5"),
+			Checkbox = Color3.fromHex("#B3BAC5"),
 
 			PanelBackground = Color3.fromHex("#FFFFFF"),
-			PanelBackgroundTransparency = 0.95,
+			PanelBackgroundTransparency = 0.025,
+			TabBackground = Color3.fromHex("#FFFFFF"),
+			TabBackgroundHover = Color3.fromHex("#FFFFFF"),
+			TabBackgroundHoverTransparency = 0.92,
+			TabBackgroundActive = Color3.fromHex("#FFFFFF"),
+			TabBackgroundActiveTransparency = 0.12,
 
-			SliderIcon = Color3.fromHex("#908F95"),
-			Primary = Color3.fromHex("#0091FF"),
+			SliderIcon = Color3.fromHex("#C1C6CE"),
+			Primary = Color3.fromHex("#D2D7DF"),
 
-			--WindowTopbarButtonIcon = Color3.fromHex("#ffffff"),
-			LabelBackground = Color3.fromHex("#000000"),
-			LabelBackgroundTransparency = 0.83,
+			LabelBackground = Color3.fromHex("#080A0D"),
+			LabelBackgroundTransparency = 0.62,
 
-			ElementBackground = Color3.fromHex("#2A2A2C"),
+			ElementBackground = Color3.fromHex("#171B22"),
 			ElementBackgroundTransparency = 0,
 		},
 
@@ -169,51 +175,51 @@ return function(WindUI, Creator)
 		Amber = {
 			Name = "Amber",
 
-			Accent = WindUI:Gradient({
+			Accent = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#b45309"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#d97706"), Transparency = 0 },
 			}, { Rotation = 45 }),
 
-			Dialog = WindUI:Gradient({
+			Dialog = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#451a03"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#6b2e05"), Transparency = 0 },
 			}, { Rotation = 90 }),
 
-			--Outline = WindUI:Gradient({
+			--Outline = ForktUI:Gradient({
 			--	["0"] = { Color = Color3.fromHex("#fde68a"), Transparency = 0 },
 			--	["100"] = { Color = Color3.fromHex("#fcd34d"), Transparency = 0 },
 			--}, { Rotation = 45 }),
 
-			Text = WindUI:Gradient({
+			Text = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#fffbeb"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#fff7ed"), Transparency = 0 },
 			}, { Rotation = 45 }),
 
-			Placeholder = WindUI:Gradient({
+			Placeholder = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#d1a326"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#fbbf24"), Transparency = 0 },
 			}, { Rotation = 45 }),
 
-			Background = WindUI:Gradient({
+			Background = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#1c1003"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#3f210d"), Transparency = 0 },
 			}, { Rotation = 90 }),
 
-			Button = WindUI:Gradient({
+			Button = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#d97706"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#f59e0b"), Transparency = 0 },
 			}, { Rotation = 45 }),
 
 			Icon = Color3.fromHex("#f59e0b"),
 
-			Toggle = WindUI:Gradient({
+			Toggle = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#d97706"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#f59e0b"), Transparency = 0 },
 			}, { Rotation = 45 }),
 
 			Slider = Color3.fromHex("#d97706"),
 
-			Checkbox = WindUI:Gradient({
+			Checkbox = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#d97706"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#fbbf24"), Transparency = 0 },
 			}, { Rotation = 45 }),
@@ -338,14 +344,14 @@ return function(WindUI, Creator)
 		Rainbow = {
 			Name = "Rainbow",
 
-			Accent = WindUI:Gradient({
+			Accent = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#00ff41"), Transparency = 0 },
 				["33"] = { Color = Color3.fromHex("#00ffff"), Transparency = 0 },
 				["66"] = { Color = Color3.fromHex("#0080ff"), Transparency = 0 },
 				["100"] = { Color = Color3.fromHex("#8000ff"), Transparency = 0 },
 			}, { Rotation = 45 }),
 
-			Dialog = WindUI:Gradient({
+			Dialog = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#ff0080"), Transparency = 0 },
 				["25"] = { Color = Color3.fromHex("#8000ff"), Transparency = 0 },
 				["50"] = { Color = Color3.fromHex("#0080ff"), Transparency = 0 },
@@ -357,7 +363,7 @@ return function(WindUI, Creator)
 			Text = Color3.fromHex("#ffffff"),
 			Placeholder = Color3.fromHex("#00ff80"),
 
-			Background = WindUI:Gradient({
+			Background = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#ff0040"), Transparency = 0 },
 				["20"] = { Color = Color3.fromHex("#ff4000"), Transparency = 0 },
 				["40"] = { Color = Color3.fromHex("#ffff00"), Transparency = 0 },
@@ -366,7 +372,7 @@ return function(WindUI, Creator)
 				["100"] = { Color = Color3.fromHex("#4000ff"), Transparency = 0 },
 			}, { Rotation = 90 }),
 
-			Button = WindUI:Gradient({
+			Button = ForktUI:Gradient({
 				["0"] = { Color = Color3.fromHex("#ff0080"), Transparency = 0 },
 				["25"] = { Color = Color3.fromHex("#ff8000"), Transparency = 0 },
 				["50"] = { Color = Color3.fromHex("#ffff00"), Transparency = 0 },

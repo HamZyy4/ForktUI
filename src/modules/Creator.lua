@@ -12,13 +12,11 @@ local DynamicShapeModule = require("./DynamicShape")
 
 local RenderStepped = RunService.Heartbeat
 
-local IconsURL = "https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"
-
 local Icons = require("../Icons/Main-v2")
 
 Icons.SetIconsType("lucide")
 
-local WindUI
+local ForktUI
 
 local Creator
 Creator = {
@@ -126,12 +124,12 @@ Creator = {
 	ThemeChangeCallbacks = {},
 }
 
-function Creator.Init(WindUITable)
-	WindUI = WindUITable
+function Creator.Init(ForktUITable)
+	ForktUI = ForktUITable
 
 	Creator.ThemeFallbacks = require("../themes/Fallbacks")(Creator)
 
-	Creator.UIScale = WindUITable.UIScale
+	Creator.UIScale = ForktUITable.UIScale
 
 	DynamicShapeModule:Init(Creator)
 end
@@ -156,12 +154,12 @@ function Creator.SafeCallback(Function, ...)
 
 	local Success, Event = pcall(Function, ...)
 	if not Success then
-		if WindUI and WindUI.Window and WindUI.Window.Debug then
+		if ForktUI and ForktUI.Window and ForktUI.Window.Debug then
 			local _, i = Event:find(":%d+: ")
 
-			warn("[ WindUI: DEBUG Mode ] " .. Event)
+			warn("[ ForktUI: DEBUG Mode ] " .. Event)
 
-			return WindUI:Notify({
+			return ForktUI:Notify({
 				Title = "DEBUG Mode: Error",
 				Content = not i and Event or Event:sub(i + 1),
 				Duration = 8,
@@ -171,8 +169,8 @@ function Creator.SafeCallback(Function, ...)
 end
 
 function Creator.Gradient(stops, props)
-	if WindUI and WindUI.Gradient then
-		return WindUI:Gradient(stops, props)
+	if ForktUI and ForktUI.Gradient then
+		return ForktUI:Gradient(stops, props)
 	end
 
 	local colorSequence = {}
@@ -628,7 +626,7 @@ function Creator.SetDraggable(can)
 end
 
 function Creator.Drag(mainFrame, dragFrames, ondrag)
-	local CurInput = WindUI.GenerateGUID()
+	local CurInput = ForktUI.GenerateGUID()
 
 	local currentDragFrame = nil
 	local dragging = false
@@ -669,11 +667,11 @@ function Creator.Drag(mainFrame, dragFrames, ondrag)
 				input.UserInputType == Enum.UserInputType.MouseButton1
 				or input.UserInputType == Enum.UserInputType.Touch
 			then
-				if WindUI and WindUI.CurrentInput and WindUI.CurrentInput ~= CurInput then
+				if ForktUI and ForktUI.CurrentInput and ForktUI.CurrentInput ~= CurInput then
 					return
 				end
 
-				WindUI.CurrentInput = CurInput
+				ForktUI.CurrentInput = CurInput
 
 				dragging = true
 				activeInput = input
@@ -692,7 +690,7 @@ function Creator.Drag(mainFrame, dragFrames, ondrag)
 		if not dragging then
 			return
 		end
-		if WindUI.CurrentInput and WindUI.CurrentInput ~= CurInput then
+		if ForktUI.CurrentInput and ForktUI.CurrentInput ~= CurInput then
 			return
 		end
 
@@ -708,7 +706,7 @@ function Creator.Drag(mainFrame, dragFrames, ondrag)
 	end)
 
 	UserInputService.InputEnded:Connect(function(input)
-		if not dragging or WindUI.CurrentInput ~= CurInput then
+		if not dragging or ForktUI.CurrentInput ~= CurInput then
 			return
 		end
 
@@ -719,7 +717,7 @@ function Creator.Drag(mainFrame, dragFrames, ondrag)
 				and input.UserInputType == Enum.UserInputType.MouseButton1
 			)
 		then
-			WindUI.CurrentInput = nil
+			ForktUI.CurrentInput = nil
 			dragging = false
 			activeInput = nil
 			currentDragFrame = nil
@@ -787,7 +785,7 @@ function Creator.Image(Img, Name, Corner, Folder, Type, IsThemeTag, Themed, Them
 		}).IconFrame
 		IconLabel.Parent = ImageFrame
 	elseif string.find(Img, "http") and not string.find(Img, "roblox.com") then
-		local FileName = "WindUI/" .. Folder .. "/assets/." .. Type .. "-" .. Name .. ".png"
+		local FileName = "ForktUI/" .. Folder .. "/assets/." .. Type .. "-" .. Name .. ".png"
 		local success, response = pcall(function()
 			task.spawn(function()
 				local response = Creator.Request
@@ -808,7 +806,7 @@ function Creator.Image(Img, Name, Corner, Folder, Type, IsThemeTag, Themed, Them
 				else
 					warn(
 						string.format(
-							"[ WindUI.Creator ] Failed to load custom asset '%s': %s",
+							"[ ForktUI.Creator ] Failed to load custom asset '%s': %s",
 							FileName,
 							tostring(asset)
 						)
@@ -821,7 +819,7 @@ function Creator.Image(Img, Name, Corner, Folder, Type, IsThemeTag, Themed, Them
 		end)
 		if not success then
 			warn(
-				"[ WindUI.Creator ]  '" .. identifyexecutor()
+				"[ ForktUI.Creator ]  '" .. identifyexecutor()
 					or "Studio" .. "' doesnt support the URL Images. Error: " .. response
 			)
 

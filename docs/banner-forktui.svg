@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="70" y1="35" x2="1510" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171A20"/>
+      <stop offset=".55" stop-color="#0D0F13"/>
+      <stop offset="1" stop-color="#090A0D"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="980" y1="155" x2="1450" y2="515" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#292E37"/>
+      <stop offset="1" stop-color="#14171C"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="980" y1="150" x2="1450" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B8C0CC" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#707782" stop-opacity=".08"/>
+    </linearGradient>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse">
+      <path d="M38 0H0V38" stroke="#AAB1BC" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="890" y="95" width="650" height="490" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="620" rx="28" fill="url(#bg)"/>
+  <rect width="1600" height="620" rx="28" fill="url(#grid)"/>
+  <circle cx="1260" cy="290" r="300" fill="#A8B0BC" fill-opacity=".07"/>
+  <ellipse cx="1200" cy="350" rx="260" ry="175" fill="#000" fill-opacity=".6" filter="url(#shadow)"/>
+  <g transform="translate(104 112)">
+    <rect x="0" y="0" width="50" height="50" rx="14" fill="#292E37" stroke="#AEB5C0" stroke-opacity=".35"/>
+    <path d="M15 11H37V18H23V24H35V31H23V40H15V11Z" fill="#F2F3F5"/>
+    <text x="70" y="34" fill="#9DA5B1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="4">ROBLOX UI FRAMEWORK</text>
+    <text x="0" y="164" fill="#F2F3F5" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="102" font-weight="750" letter-spacing="-7">FORKTUI</text>
+    <text x="5" y="220" fill="#B5BBC5" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="27" font-weight="500">A refined interface toolkit for Roblox experiences.</text>
+    <g transform="translate(0 274)">
+      <rect width="144" height="38" rx="19" fill="#E1E4E9" fill-opacity=".09" stroke="#C6CCD5" stroke-opacity=".2"/>
+      <text x="72" y="24" text-anchor="middle" fill="#D9DDE3" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="650">GRAPHITE UI</text>
+      <rect x="158" width="132" height="38" rx="19" fill="#E1E4E9" fill-opacity=".09" stroke="#C6CCD5" stroke-opacity=".2"/>
+      <text x="224" y="24" text-anchor="middle" fill="#D9DDE3" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="650">MODULAR</text>
+      <rect x="304" width="150" height="38" rx="19" fill="#E1E4E9" fill-opacity=".09" stroke="#C6CCD5" stroke-opacity=".2"/>
+      <text x="379" y="24" text-anchor="middle" fill="#D9DDE3" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="650">DOCUMENTED</text>
+    </g>
+    <text x="3" y="402" fill="#747C87" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" font-weight="600" letter-spacing="2">BUILD CLEAN · SHIP CONSISTENT</text>
+  </g>
+  <g transform="translate(965 130)">
+    <rect x="0" y="0" width="500" height="370" rx="22" fill="url(#panel)" stroke="url(#edge)"/>
+    <path d="M0 62H500" stroke="#C5CBD4" stroke-opacity=".11"/>
+    <circle cx="29" cy="31" r="5" fill="#727A86"/>
+    <circle cx="48" cy="31" r="5" fill="#727A86" fill-opacity=".7"/>
+    <circle cx="67" cy="31" r="5" fill="#727A86" fill-opacity=".45"/>
+    <text x="95" y="36" fill="#AEB5C0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" font-weight="600">FORKTUI / WINDOW PREVIEW</text>
+    <rect x="20" y="82" width="132" height="267" rx="12" fill="#101318" stroke="#8D96A4" stroke-opacity=".12"/>
+    <rect x="34" y="99" width="104" height="34" rx="8" fill="#E7E9ED" fill-opacity=".09"/>
+    <rect x="44" y="111" width="13" height="10" rx="3" fill="#AEB5C0"/>
+    <rect x="65" y="111" width="57" height="7" rx="3.5" fill="#D9DDE3" fill-opacity=".65"/>
+    <rect x="34" y="149" width="104" height="28" rx="7" fill="#D7DCE4" fill-opacity=".11"/>
+    <rect x="44" y="160" width="12" height="7" rx="3.5" fill="#C3C9D2"/>
+    <rect x="65" y="160" width="47" height="7" rx="3.5" fill="#89919C"/>
+    <rect x="34" y="188" width="104" height="28" rx="7" fill="#D7DCE4" fill-opacity=".04"/>
+    <rect x="44" y="199" width="12" height="7" rx="3.5" fill="#8A929D"/>
+    <rect x="65" y="199" width="47" height="7" rx="3.5" fill="#69717D"/>
+    <rect x="34" y="227" width="104" height="28" rx="7" fill="#D7DCE4" fill-opacity=".04"/>
+    <rect x="44" y="238" width="12" height="7" rx="3.5" fill="#8A929D"/>
+    <rect x="65" y="238" width="47" height="7" rx="3.5" fill="#69717D"/>
+    <rect x="34" y="278" width="104" height="53" rx="8" fill="#E2E5EA" fill-opacity=".045"/>
+    <rect x="47" y="293" width="76" height="5" rx="2.5" fill="#AAB1BC" fill-opacity=".55"/>
+    <rect x="47" y="306" width="55" height="5" rx="2.5" fill="#7B8490" fill-opacity=".5"/>
+    <rect x="169" y="82" width="311" height="267" rx="12" fill="#0E1115" stroke="#8D96A4" stroke-opacity=".12"/>
+    <text x="191" y="113" fill="#E5E8ED" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">General Settings</text>
+    <text x="191" y="135" fill="#818A96" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="10">Manage your interface preferences</text>
+    <rect x="190" y="154" width="268" height="61" rx="10" fill="#20252D" stroke="#B7C0CD" stroke-opacity=".09"/>
+    <text x="207" y="178" fill="#DDE1E7" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="11" font-weight="650">Enable notifications</text>
+    <text x="207" y="195" fill="#818A96" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="9">Show useful status updates</text>
+    <rect x="411" y="174" width="29" height="16" rx="8" fill="#8E97A4"/>
+    <circle cx="431" cy="182" r="6" fill="#F4F5F7"/>
+    <rect x="190" y="226" width="268" height="61" rx="10" fill="#20252D" stroke="#B7C0CD" stroke-opacity=".09"/>
+    <text x="207" y="250" fill="#DDE1E7" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="11" font-weight="650">Interface scale</text>
+    <text x="207" y="267" fill="#818A96" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="9">Adjust the window density</text>
+    <path d="M208 304H438" stroke="#3D444E" stroke-width="5" stroke-linecap="round"/>
+    <path d="M208 304H350" stroke="#AEB6C2" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="350" cy="304" r="8" fill="#F1F2F4" stroke="#717A86" stroke-width="2"/>
+  </g>
+  <text x="1460" y="573" text-anchor="end" fill="#656D78" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12" font-weight="600" letter-spacing="2">FORKTUI · 1.6.66</text>
+</svg>

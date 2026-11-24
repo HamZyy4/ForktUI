@@ -17,7 +17,7 @@ R='\033[0m'
 } > build/package.lua
 
 if [ "$MODE" = "dev" ]; then
-    INPUT=${2:-"./main.lua"}
+    INPUT=${2:-"./examples/full-example.client.lua"}
     PREFIX="${D}[ DEV ]${R}"
 else
     INPUT="src/Init.lua"
@@ -70,7 +70,7 @@ SIZE=$(($(wc -c < "$OUTPUT") / 1024))
 echo ""
 echo -e "[ $(date '+%H:%M:%S') ]"
 echo -e "${P}[ ✓ ]${R} $PREFIX"
-echo -e "${P}[ > ]${R} WindUI Build completed successfully"
+echo -e "${P}[ > ]${R} ForktUI Build completed successfully"
 echo -e "${P}[ > ]${R} Version: ${VER}"
 echo -e "${P}[ > ]${R} Time taken: ${TIME}ms"
 echo -e "${P}[ > ]${R} Size: ${SIZE}KB"

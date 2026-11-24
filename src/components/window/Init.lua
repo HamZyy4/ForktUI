@@ -28,8 +28,8 @@ local Notified = false
 
 return function(Config)
 	local Window = {
-		Title = Config.Title or "UI Library",
-		Author = Config.Author,
+		Title = Config.Title or "ForktUI",
+		Author = Config.Author or "sukitovone",
 		Icon = Config.Icon,
 		IconSize = Config.IconSize or 22,
 		IconThemed = Config.IconThemed,
@@ -41,24 +41,27 @@ return function(Config)
 		ShadowTransparency = Config.ShadowTransparency or 0.6,
 		User = Config.User or {},
 		Footer = Config.Footer or {},
-		Topbar = Config.Topbar or { Height = 52, ButtonsType = "Default" }, -- Default or Mac
+		Topbar = type(Config.Topbar) == "table" and {
+			Height = tonumber(Config.Topbar.Height) or 60,
+			ButtonsType = Config.Topbar.ButtonsType == "Mac" and "Mac" or "Default",
+		} or { Height = 60, ButtonsType = "Default" }, -- Default or Mac
 
 		Size = Config.Size,
 
-		MinSize = Config.MinSize or Vector2.new(560, 350),
-		MaxSize = Config.MaxSize or Vector2.new(850, 560),
+		MinSize = Config.MinSize or Vector2.new(540, 360),
+		MaxSize = Config.MaxSize or Vector2.new(960, 680),
 
 		TopBarButtonIconSize = Config.TopBarButtonIconSize,
 
 		ToggleKey = Config.ToggleKey,
 		ElementsRadius = Config.ElementsRadius,
-		Radius = Config.Radius or 16,
+		Radius = Config.Radius or 14,
 		Transparent = Config.Transparent or false,
 		HideSearchBar = Config.HideSearchBar ~= false,
 		ScrollBarEnabled = Config.ScrollBarEnabled or false,
-		SideBarWidth = Config.SideBarWidth or 200,
+		SideBarWidth = Config.SideBarWidth or 184,
 		Acrylic = Config.Acrylic or false,
-		NewElements = Config.NewElements or false,
+		NewElements = Config.NewElements ~= false,
 		IgnoreAlerts = Config.IgnoreAlerts or false,
 		HidePanelBackground = Config.HidePanelBackground or false,
 		AutoScale = Config.AutoScale ~= false,
@@ -66,8 +69,8 @@ return function(Config)
 		DragFrameSize = 160,
 
 		Position = UDim2.new(0.5, 0, 0.5, 0),
-		UICorner = 16, -- Window.Radius (16)
-		UIPadding = 14,
+		UICorner = 14, -- ForktUI flat-panel radius
+		UIPadding = 16,
 		UIElements = {},
 		CanDropdown = true,
 		Closed = false,
@@ -89,7 +92,7 @@ return function(Config)
 
 		IsPC = false,
 
-		Gap = 5,
+		Gap = 7,
 
 		TopBarButtons = {},
 		AllElements = {},
@@ -107,10 +110,10 @@ return function(Config)
 
 	Window.ElementConfig = {
 		UIPadding = (Window.NewElements and 10 or 13),
-		UICorner = Window.ElementsRadius or (Window.NewElements and 23 or 16),
+		UICorner = Window.ElementsRadius or (Window.NewElements and 12 or 14),
 	}
 
-	local WindowSize = Window.Size or UDim2.new(0, 580, 0, 460)
+	local WindowSize = Window.Size or UDim2.new(0, 720, 0, 520)
 	Window.Size = UDim2.new(
 		WindowSize.X.Scale,
 		math.clamp(WindowSize.X.Offset, Window.MinSize.X, Window.MaxSize.X),
@@ -118,23 +121,29 @@ return function(Config)
 		math.clamp(WindowSize.Y.Offset, Window.MinSize.Y, Window.MaxSize.Y)
 	)
 
-	if Window.Topbar == {} then
-		Window.Topbar = { Height = 52, ButtonsType = "Default" }
+	local function ensureFolder(path)
+		if
+			type(path) ~= "string"
+			or path == ""
+			or type(isfolder) ~= "function"
+			or type(makefolder) ~= "function"
+		then
+			return
+		end
+
+		local ok, exists = pcall(isfolder, path)
+		if ok and not exists then
+			pcall(makefolder, path)
+		end
 	end
 
-	if not RunService:IsStudio() and Window.Folder and writefile then
-		if not isfolder("WindUI/" .. Window.Folder) then
-			makefolder("WindUI/" .. Window.Folder)
-		end
-		if not isfolder("WindUI/" .. Window.Folder .. "/assets") then
-			makefolder("WindUI/" .. Window.Folder .. "/assets")
-		end
-		if not isfolder(Window.Folder) then
-			makefolder(Window.Folder)
-		end
-		if not isfolder(Window.Folder .. "/assets") then
-			makefolder(Window.Folder .. "/assets")
-		end
+	if not RunService:IsStudio() and Window.Folder and type(writefile) == "function" then
+		local folder = tostring(Window.Folder)
+		ensureFolder("ForktUI")
+		ensureFolder("ForktUI/" .. folder)
+		ensureFolder("ForktUI/" .. folder .. "/assets")
+		ensureFolder(folder)
+		ensureFolder(folder .. "/assets")
 	end
 
 	local UICorner = New("UICorner", {
@@ -275,7 +284,7 @@ return function(Config)
 			Window.UIElements.SideBarContainer.Content,
 			Window,
 			3,
-			Config.WindUI
+			Config.ForktUI
 		)
 	end
 
@@ -561,7 +570,7 @@ return function(Config)
 					writefile(videoPath, response)
 				end)
 				if not success then
-					warn("[ WindUI.Window.Background ] Failed to download video: " .. tostring(result))
+					warn("[ ForktUI.Window.Background ] Failed to download video: " .. tostring(result))
 				end
 			end
 
@@ -569,9 +578,9 @@ return function(Config)
 				return getcustomasset(videoPath)
 			end)
 			if not success then
-				warn("[ WindUI.Window.Background ] Failed to load custom asset: " .. tostring(customAsset))
+				warn("[ ForktUI.Window.Background ] Failed to load custom asset: " .. tostring(customAsset))
 			end
-			warn("[ WindUI.Window.Background ] VideoFrame may not work with custom video")
+			warn("[ ForktUI.Window.Background ] VideoFrame may not work with custom video")
 			BGVideo = customAsset
 		end
 
@@ -720,11 +729,11 @@ return function(Config)
 		Active = true,
 		--GroupTransparency = 1,
 	}, {
-		Config.WindUI.UIScaleObj,
+		Config.ForktUI.UIScaleObj,
 		Window.AcrylicPaint and Window.AcrylicPaint.Frame or nil,
 		Blur,
 		Creator.NewRoundFrame(Window.UICorner, "Squircle", {
-			ImageTransparency = 1, --  Window.Transparent and Config.WindUI.TransparencyValue or 0,
+			ImageTransparency = 1, --  Window.Transparent and Config.ForktUI.TransparencyValue or 0,
 			Size = UDim2.new(1, 0, 1, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -869,19 +878,19 @@ return function(Config)
 	Creator.AddSignal(Window.UIElements.Main.Main.Topbar.Left:GetPropertyChangedSignal("AbsoluteSize"), function()
 		local LeftWidth = 0
 		local RightWidth = Window.UIElements.Main.Main.Topbar.Right.UIListLayout.AbsoluteContentSize.X
-			/ Config.WindUI.UIScale
+			/ Config.ForktUI.UIScale
 
-		LeftWidth = Window.UIElements.Main.Main.Topbar.Left.AbsoluteSize.X / Config.WindUI.UIScale
+		LeftWidth = Window.UIElements.Main.Main.Topbar.Left.AbsoluteSize.X / Config.ForktUI.UIScale
 		if Window.Topbar.ButtonsType ~= "Default" then
 			LeftWidth = LeftWidth + RightWidth + Window.UIPadding - 4
 		end
 
 		Window.UIElements.Main.Main.Topbar.Center.Position =
-			UDim2.new(0, LeftWidth + (Window.UIPadding / Config.WindUI.UIScale), 0.5, 0)
+			UDim2.new(0, LeftWidth + (Window.UIPadding / Config.ForktUI.UIScale), 0.5, 0)
 		Window.UIElements.Main.Main.Topbar.Center.Size = UDim2.new(
 			1,
 			-LeftWidth
-				- (Window.UIPadding / Config.WindUI.UIScale)
+				- (Window.UIPadding / Config.ForktUI.UIScale)
 				- (Window.Topbar.ButtonsType == "Default" and RightWidth + Window.UIPadding or 0),
 			1,
 			0
@@ -892,7 +901,7 @@ return function(Config)
 		Creator.AddSignal(Window.UIElements.Main.Main.Topbar.Right:GetPropertyChangedSignal("AbsoluteSize"), function()
 			Window.UIElements.Main.Main.Topbar.Left.Position = UDim2.new(
 				0,
-				(Window.UIElements.Main.Main.Topbar.Right.AbsoluteSize.X / Config.WindUI.UIScale) + Window.UIPadding - 4,
+				(Window.UIElements.Main.Main.Topbar.Right.AbsoluteSize.X / Config.ForktUI.UIScale) + Window.UIPadding - 4,
 				0,
 				0
 			)
@@ -1090,7 +1099,7 @@ return function(Config)
 		Window.UIElements.BackgroundGradient = Creator.NewRoundFrame(Window.UICorner, "Squircle", {
 			Size = UDim2.new(1, 0, 1, 0),
 			Parent = Window.UIElements.Main.Background,
-			ImageTransparency = Window.Transparent and Config.WindUI.TransparencyValue or 0,
+			ImageTransparency = Window.Transparent and Config.ForktUI.TransparencyValue or 0,
 		}, {
 			BackgroundGradient,
 		})
@@ -1190,7 +1199,7 @@ return function(Config)
 
 	function Window:SetBackgroundTransparency(v)
 		local rounded = math.floor(tonumber(v) * 10 + 0.5) / 10
-		Config.WindUI.TransparencyValue = rounded
+		Config.ForktUI.TransparencyValue = rounded
 		Window:ToggleTransparency(rounded > 0)
 	end
 
@@ -1215,9 +1224,9 @@ return function(Config)
 		Tween(Window.UIElements.Main, 0.45, {
 			Size = not Window.IsFullscreen and CurrentSize or UDim2.new(
 				0,
-				(Config.WindUI.ScreenGui.AbsoluteSize.X - 20) / Config.WindUI.UIScale,
+				(Config.ForktUI.ScreenGui.AbsoluteSize.X - 20) / Config.ForktUI.UIScale,
 				0,
-				(Config.WindUI.ScreenGui.AbsoluteSize.Y - 20 - 52) / Config.WindUI.UIScale
+				(Config.ForktUI.ScreenGui.AbsoluteSize.Y - 20 - 52) / Config.ForktUI.UIScale
 			),
 		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
 
@@ -1251,7 +1260,7 @@ return function(Config)
 		SetSize(true)
 	end
 
-	Creator.AddSignal(Config.WindUI.ScreenGui:GetPropertyChangedSignal("AbsoluteSize"), function()
+	Creator.AddSignal(Config.ForktUI.ScreenGui:GetPropertyChangedSignal("AbsoluteSize"), function()
 		if Window.IsFullscreen then
 			SetSize()
 		end
@@ -1276,7 +1285,7 @@ return function(Config)
 		-- end
 		-- if not Notified then
 		--     Notified = not Notified
-		--     Config.WindUI:Notify({
+		--     Config.ForktUI:Notify({
 		--         Title = "Minimize",
 		--         Content = "You've closed the Window. " .. NotifiedText,
 		--         Icon = "eye-off",
@@ -1295,7 +1304,7 @@ return function(Config)
 		Window.OnDestroyCallback = func
 	end
 
-	if Config.WindUI.UseAcrylic then
+	if Config.ForktUI.UseAcrylic then
 		Window.AcrylicPaint.AddParent(Window.UIElements.Main)
 	end
 
@@ -1344,7 +1353,7 @@ return function(Config)
 			Window.UIElements.Main.Background.ImageTransparency = 1
 			Tween(Window.UIElements.Main.Background, 0.4, {
 				--Size = UDim2.new(1, 0, 1, 0),
-				ImageTransparency = Window.Transparent and Config.WindUI.TransparencyValue or 0,
+				ImageTransparency = Window.Transparent and Config.ForktUI.TransparencyValue or 0,
 			}, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out):Play()
 
 			if BGImage then
@@ -1361,11 +1370,11 @@ return function(Config)
 				Window.OpenButtonMain:Visible(false)
 			end
 
-			--[[Config.WindUI.UIScaleObj.Scale -= 1 - 0.85
+			--[[Config.ForktUI.UIScaleObj.Scale -= 1 - 0.85
 			Tween(
-				Config.WindUI.UIScaleObj,
+				Config.ForktUI.UIScaleObj,
 				0.33,
-				{ Scale = Config.WindUI.UIScale },
+				{ Scale = Config.ForktUI.UIScale },
 				Enum.EasingStyle.Back,
 				Enum.EasingDirection.Out
 			):Play()]]
@@ -1407,7 +1416,7 @@ return function(Config)
 
 			Window.UIElements.Main:WaitForChild("Main").Visible = true
 
-			Config.WindUI:ToggleAcrylic(true)
+			Config.ForktUI:ToggleAcrylic(true)
 			--end)
 		end)
 	end
@@ -1424,7 +1433,7 @@ return function(Config)
 			end)
 		end
 
-		Config.WindUI:ToggleAcrylic(false)
+		Config.ForktUI:ToggleAcrylic(false)
 
 		if Window.UIElements.Main and Window.UIElements.Main:WaitForChild("Main") then
 			Window.UIElements.Main.Main.Visible = false
@@ -1449,9 +1458,9 @@ return function(Config)
 		}, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut):Play()
 
 		--[[Tween(
-			Config.WindUI.UIScaleObj,
+			Config.ForktUI.UIScaleObj,
 			0.28,
-			{ Scale = Config.WindUI.UIScale - (1 - 0.85) },
+			{ Scale = Config.ForktUI.UIScale - (1 - 0.85) },
 			Enum.EasingStyle.Quint,
 			Enum.EasingDirection.Out
 		):Play()]]
@@ -1516,10 +1525,10 @@ return function(Config)
 
 				task.wait(0.4)
 
-				Config.WindUI.ScreenGui:Destroy()
-				Config.WindUI.NotificationGui:Destroy()
-				Config.WindUI.DropdownGui:Destroy()
-				Config.WindUI.TooltipGui:Destroy()
+				Config.ForktUI.ScreenGui:Destroy()
+				Config.ForktUI.NotificationGui:Destroy()
+				Config.ForktUI.DropdownGui:Destroy()
+				Config.ForktUI.TooltipGui:Destroy()
 
 				Creator.DisconnectAll()
 
@@ -1543,10 +1552,10 @@ return function(Config)
 	function Window:ToggleTransparency(Value)
 		-- Config.Transparent = Value
 		Window.Transparent = Value
-		Config.WindUI.Transparent = Value
+		Config.ForktUI.Transparent = Value
 
-		Window.UIElements.Main.Background.ImageTransparency = Value and Config.WindUI.TransparencyValue or 0
-		-- Window.UIElements.Main.Background.ImageLabel.ImageTransparency = Value and Config.WindUI.TransparencyValue or 0
+		Window.UIElements.Main.Background.ImageTransparency = Value and Config.ForktUI.TransparencyValue or 0
+		-- Window.UIElements.Main.Background.ImageLabel.ImageTransparency = Value and Config.ForktUI.TransparencyValue or 0
 		--Window.UIElements.MainBar.Background.ImageTransparency = Value and 0.97 or 0.95
 	end
 
@@ -1588,12 +1597,12 @@ return function(Config)
 	end
 
 	function Window:GetUIScale(v)
-		return Config.WindUI.UIScale
+		return Config.ForktUI.UIScale
 	end
 
 	function Window:SetUIScale(v)
-		Config.WindUI.UIScale = v
-		Tween(Config.WindUI.UIScaleObj, 0.2, { Scale = v }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+		Config.ForktUI.UIScale = v
+		Tween(Config.ForktUI.UIScaleObj, 0.2, { Scale = v }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
 		return Window
 	end
 
@@ -1675,7 +1684,7 @@ return function(Config)
 
 	local TabModuleMain = require("./Tab")
 	local SectionModule = require("./Section")
-	local TabModule = TabModuleMain.Init(Window, Config.WindUI, Config.WindUI.TooltipGui)
+	local TabModule = TabModuleMain.Init(Window, Config.ForktUI, Config.ForktUI.TooltipGui)
 	TabModule:OnChange(function(t)
 		Window.CurrentTab = t
 	end)
@@ -1684,7 +1693,7 @@ return function(Config)
 
 	function Window:Tab(TabConfig)
 		TabConfig.Parent = Window.UIElements.SideBar.Frame
-		return TabModule.New(TabConfig, Config.WindUI.UIScale)
+		return TabModule.New(TabConfig, Config.ForktUI.UIScale)
 	end
 
 	function Window:SelectTab(Tab)
@@ -1696,7 +1705,7 @@ return function(Config)
 			SectionConfig,
 			Window.UIElements.SideBar.Frame,
 			Window.Folder,
-			Config.WindUI.UIScale,
+			Config.ForktUI.UIScale,
 			Window
 		)
 	end
@@ -1758,7 +1767,7 @@ return function(Config)
 
 			TextPadding = 14,
 		}
-		local Dialog = DialogModule.Create(false, "Dialog", Window, Config.WindUI, Window.UIElements.Main.Main)
+		local Dialog = DialogModule.Create(false, "Dialog", Window, Config.ForktUI, Window.UIElements.Main.Main)
 
 		Dialog.UIElements.Main.Size = UDim2.new(0, DialogTable.Width, 0, 0)
 
@@ -1908,8 +1917,8 @@ return function(Config)
 
 			wait()
 
-			local totalWidth = ButtonsLayout.AbsoluteContentSize.X / Config.WindUI.UIScale
-			local parentWidth = ButtonsContent.AbsoluteSize.X / Config.WindUI.UIScale
+			local totalWidth = ButtonsLayout.AbsoluteContentSize.X / Config.ForktUI.UIScale
+			local parentWidth = ButtonsContent.AbsoluteSize.X / Config.ForktUI.UIScale
 
 			if totalWidth > parentWidth then
 				ButtonsLayout.FillDirection = Enum.FillDirection.Vertical
@@ -1928,7 +1937,7 @@ return function(Config)
 					local smallestWidth = math.huge
 
 					for _, button in ipairs(Buttons) do
-						local buttonWidth = button.AbsoluteSize.X / Config.WindUI.UIScale
+						local buttonWidth = button.AbsoluteSize.X / Config.ForktUI.UIScale
 						if buttonWidth < smallestWidth then
 							smallestWidth = buttonWidth
 							smallestButton = button
@@ -1997,7 +2006,7 @@ return function(Config)
 		return Tag:New(TagConfig, Window.UIElements.Main.Main.Topbar.Center.Holder)
 	end
 
-	local CurResizeInput = Config.WindUI.GenerateGUID()
+	local CurResizeInput = Config.ForktUI.GenerateGUID()
 
 	local function startResizing(input)
 		if Window.CanResize then
@@ -2011,11 +2020,11 @@ return function(Config)
 
 			Creator.AddSignal(input.Changed, function()
 				if input.UserInputState == Enum.UserInputState.End then
-					if Config.WindUI.CurrentInput and Config.WindUI.CurrentInput ~= CurResizeInput then
+					if Config.ForktUI.CurrentInput and Config.ForktUI.CurrentInput ~= CurResizeInput then
 						return
 					end
 
-					Config.WindUI.CurrentInput = nil
+					Config.ForktUI.CurrentInput = nil
 
 					isResizing = false
 					FullScreenIcon.Active = false
@@ -2032,10 +2041,10 @@ return function(Config)
 			input.UserInputType == Enum.UserInputType.MouseButton1
 			or input.UserInputType == Enum.UserInputType.Touch
 		then
-			if Config.WindUI.CurrentInput and Config.WindUI.CurrentInput ~= CurResizeInput then
+			if Config.ForktUI.CurrentInput and Config.ForktUI.CurrentInput ~= CurResizeInput then
 				return
 			end
-			Config.WindUI.CurrentInput = CurResizeInput
+			Config.ForktUI.CurrentInput = CurResizeInput
 
 			if Window.CanResize then
 				startResizing(input)
@@ -2069,7 +2078,7 @@ return function(Config)
 	end)
 
 	Creator.AddSignal(ResizeHandle.MouseEnter, function()
-		if Config.WindUI.CurrentInput and Config.WindUI.CurrentInput ~= CurResizeInput then
+		if Config.ForktUI.CurrentInput and Config.ForktUI.CurrentInput ~= CurResizeInput then
 			return
 		end
 		if not isResizing then
@@ -2077,7 +2086,7 @@ return function(Config)
 		end
 	end)
 	Creator.AddSignal(ResizeHandle.MouseLeave, function()
-		if Config.WindUI.CurrentInput and Config.WindUI.CurrentInput ~= CurResizeInput then
+		if Config.ForktUI.CurrentInput and Config.ForktUI.CurrentInput ~= CurResizeInput then
 			return
 		end
 		if not isResizing then

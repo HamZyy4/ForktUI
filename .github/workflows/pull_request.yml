@@ -1,4 +1,4 @@
-name: Build WindUI (Pull Request)
+name: Build ForktUI (Pull Request)
 
 on:
     pull_request:
@@ -50,9 +50,8 @@ jobs:
                   echo "$HEAD_SHA"  > pr-result/sha
                   echo "$OUTCOME"   > pr-result/outcome
                   [ -f build.log ] && tail -c 5000 build.log > pr-result/build.log || true
-
                   USING_MAIN=false
-                  if [ -f main_example.lua ] && grep -qF "loadstring(game:HttpGet('https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/main.client.lua'))()" main_example.lua; then
+                  if [ -f examples/full-example.client.lua ] && grep -qF "https://raw.githubusercontent.com/HamZyy4/ForktUI/main/dist/main.lua" examples/full-example.client.lua; then
                     USING_MAIN=true
                   fi
                   echo "$USING_MAIN" > pr-result/using_main_client

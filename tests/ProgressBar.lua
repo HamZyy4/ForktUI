@@ -1,6 +1,6 @@
-local WindUI = require("../src/Init")
+local ForktUI = require("../src/Init")
 
-local Window = WindUI:CreateWindow({
+local Window = ForktUI:CreateWindow({
 	Title = "ProgressBar Test",
 })
 

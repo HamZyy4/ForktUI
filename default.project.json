@@ -1,26 +1,21 @@
 {
-    "name": "WindUI",
+    "name": "ForktUI",
     "tree": {
         "$className": "DataModel",
-
         "ReplicatedStorage": {
-            "WindUI": {
+            "ForktUI": {
                 "$path": "src/"
             },
             "build": {
                 "$path": "build/"
             }
         },
-        "ServerScriptService": {
-            "$className": "ServerScriptService",
-            "$path": "src/server/"
-        },
         "StarterPlayer": {
             "$className": "StarterPlayer",
             "StarterPlayerScripts": {
                 "$className": "StarterPlayerScripts",
-                "main": {
-                    "$path": "main.client.lua"
+                "ForktUIExample": {
+                    "$path": "examples/full-example.client.lua"
                 }
             }
         }

@@ -2,506 +2,378 @@ local KeySystem = {}
 
 local Creator = require("../modules/Creator")
 local New = Creator.New
-local Tween = Creator.Tween
-
 local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
 
-function KeySystem.new(Config, Filename, func, keyValidator)
-	local KeyDialogInit = require("./window/Dialog")
-	local KeyDialog = KeyDialogInit.Create(true, "Popup", Config.Window, Config.WindUI, Config.WindUI.ScreenGui.KeySystem)
+local function trim(value)
+	return tostring(value or ""):match("^%s*(.-)%s*$")
+end
 
-	local Services = {}
-
-	local EnteredKey
-
-	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
-
-	local UISize = 430
-	if Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Image then
-		UISize = 430 + (ThumbnailSize / 2)
-	end
-
-	KeyDialog.UIElements.Main.AutomaticSize = "Y"
-	KeyDialog.UIElements.Main.Size = UDim2.new(0, UISize, 0, 0)
-
-	local IconFrame
-
-	if Config.Icon then
-		IconFrame =
-			Creator.Image(Config.Icon, Config.Title .. ":" .. Config.Icon, 0, "Temp", "KeySystem", Config.IconThemed)
-		IconFrame.Size = UDim2.new(0, 24, 0, 24)
-		IconFrame.LayoutOrder = -1
-	end
-
-	local Title = New("TextLabel", {
-		AutomaticSize = "XY",
-		BackgroundTransparency = 1,
-		Text = Config.KeySystem.Title or Config.Title,
-		FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
-		ThemeTag = {
-			TextColor3 = "Text",
-		},
-		TextSize = 20,
-	})
-
-	local KeySystemTitle = New("TextLabel", {
-		AutomaticSize = "XY",
-		BackgroundTransparency = 1,
-		Text = "Key System",
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, 0, 0.5, 0),
-		TextTransparency = 1, -- .4 -- hidden
-		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-		ThemeTag = {
-			TextColor3 = "Text",
-		},
-		TextSize = 16,
-	})
-
-	local IconAndTitleContainer = New("Frame", {
-		BackgroundTransparency = 1,
-		AutomaticSize = "XY",
-	}, {
-		New("UIListLayout", {
-			Padding = UDim.new(0, 14),
-			FillDirection = "Horizontal",
-			VerticalAlignment = "Center",
-		}),
-		IconFrame,
-		Title,
-	})
-
-	local TitleContainer = New("Frame", {
-		AutomaticSize = "Y",
-		Size = UDim2.new(1, 0, 0, 0),
-		BackgroundTransparency = 1,
-	}, {
-		-- New("UIListLayout", {
-		--     Padding = UDim.new(0,9),
-		--     FillDirection = "Horizontal",
-		--     VerticalAlignment = "Bottom"
-		-- }),
-		IconAndTitleContainer,
-		KeySystemTitle,
-	})
-
-	local InputFrame = CreateInput("Enter Key", "key", nil, "Input", function(k)
-		EnteredKey = k
-	end)
-
-	local NoteText
-	if Config.KeySystem.Note and Config.KeySystem.Note ~= "" then
-		NoteText = New("TextLabel", {
-			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = "Y",
-			FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-			TextXAlignment = "Left",
-			Text = Config.KeySystem.Note,
-			TextSize = 18,
-			TextTransparency = 0.4,
-			ThemeTag = {
-				TextColor3 = "Text",
-			},
-			BackgroundTransparency = 1,
-			RichText = true,
-			TextWrapped = true,
-		})
-	end
-
-	local ButtonsContainer = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 42),
-		BackgroundTransparency = 1,
-	}, {
-		New("Frame", {
-			BackgroundTransparency = 1,
-			AutomaticSize = "X",
-			Size = UDim2.new(0, 0, 1, 0),
-		}, {
-			New("UIListLayout", {
-				Padding = UDim.new(0, 18 / 2),
-				FillDirection = "Horizontal",
-			}),
-		}),
-	})
-
-	local ThumbnailFrame
-	if Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Image then
-		local ThumbnailTitle
-		if Config.KeySystem.Thumbnail.Title then
-			ThumbnailTitle = New("TextLabel", {
-				Text = Config.KeySystem.Thumbnail.Title,
-				ThemeTag = {
-					TextColor3 = "Text",
-				},
-				TextSize = 18,
-				FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-				BackgroundTransparency = 1,
-				AutomaticSize = "XY",
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				Position = UDim2.new(0.5, 0, 0.5, 0),
-			})
-		end
-		ThumbnailFrame = New("ImageLabel", {
-			Image = Config.KeySystem.Thumbnail.Image,
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0, ThumbnailSize, 1, -12),
-			Position = UDim2.new(0, 6, 0, 6),
-			Parent = KeyDialog.UIElements.Main,
-			ScaleType = "Crop",
-		}, {
-			ThumbnailTitle,
-			New("UICorner", {
-				CornerRadius = UDim.new(0, 26 - 6),
-			}),
-		})
-	end
-
-	local MainFrame = New("Frame", {
-		--AutomaticSize = "XY",
-		Size = UDim2.new(1, ThumbnailFrame and -ThumbnailSize or 0, 1, 0),
-		Position = UDim2.new(0, ThumbnailFrame and ThumbnailSize or 0, 0, 0),
-		BackgroundTransparency = 1,
-		Parent = KeyDialog.UIElements.Main,
-	}, {
-		New("Frame", {
-			--AutomaticSize = "XY",
-			Size = UDim2.new(1, 0, 1, 0),
-			BackgroundTransparency = 1,
-		}, {
-			New("UIListLayout", {
-				Padding = UDim.new(0, 18),
-				FillDirection = "Vertical",
-			}),
-			TitleContainer,
-			NoteText,
-			InputFrame,
-			ButtonsContainer,
-			New("UIPadding", {
-				PaddingTop = UDim.new(0, 16),
-				PaddingLeft = UDim.new(0, 16),
-				PaddingRight = UDim.new(0, 16),
-				PaddingBottom = UDim.new(0, 16),
-			}),
-		}),
-	})
-
-	-- for _, values in next, KeySystemButtons do
-	--     CreateButton(values.Title, values.Icon, values.Callback, values.Variant)
-	-- end
-
-	local ExitButton = CreateButton("Exit", "log-out", function()
-		KeyDialog:Close()()
-	end, "Tertiary", ButtonsContainer.Frame)
-
-	if ThumbnailFrame then
-		ExitButton.Parent = ThumbnailFrame
-		ExitButton.Size = UDim2.new(0, 0, 0, 42)
-		ExitButton.Position = UDim2.new(0, 10, 1, -10)
-		ExitButton.AnchorPoint = Vector2.new(0, 1)
-	end
-
-	if Config.KeySystem.URL then
-		CreateButton("Get key", "key", function()
-			setclipboard(Config.KeySystem.URL)
-		end, "Secondary", ButtonsContainer.Frame)
-	end
-
-	if Config.KeySystem.API then
-		-- local Icons = {
-		--     platoboost = "rbxassetid://75920162824531",
-		--     pandadevelopment = "panda",
-		-- }
-		-- local Names = {
-		--     platoboost = "Platoboost",
-		--     pandadevelopment = "Panda Development",
-		-- }
-		local Width = 240
-		local Opened = false
-		local ButtonFrame = CreateButton("Get key", "key", nil, "Secondary", ButtonsContainer.Frame)
-
-		local Divider = Creator.NewRoundFrame(99, "Squircle", {
-			Size = UDim2.new(0, 1, 1, 0),
-			ThemeTag = {
-				ImageColor3 = "Text",
-			},
-			ImageTransparency = 0.9,
-		})
-
-		local DividerContainer = New("Frame", {
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0, 0, 1, 0),
-			AutomaticSize = "X",
-			Parent = ButtonFrame.Frame,
-		}, {
-			Divider,
-			New("UIPadding", {
-				PaddingLeft = UDim.new(0, 5),
-				PaddingRight = UDim.new(0, 5),
-			}),
-		})
-
-		local ChevronDown = Creator.Image("chevron-down", "chevron-down", 0, "Temp", "KeySystem", true)
-
-		ChevronDown.Size = UDim2.new(1, 0, 1, 0)
-
-		local IconContainer = New("Frame", {
-			Size = UDim2.new(0, 24 - 3, 0, 24 - 3),
-			Parent = ButtonFrame.Frame,
-			BackgroundTransparency = 1,
-		}, {
-			ChevronDown,
-		})
-
-		local DropdownFrame = Creator.NewRoundFrame(15, "Squircle", {
-			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = "Y",
-			ThemeTag = {
-				ImageColor3 = "Background",
-			},
-		}, {
-			New("UIPadding", {
-				PaddingTop = UDim.new(0, 10 / 2),
-				PaddingLeft = UDim.new(0, 10 / 2),
-				PaddingRight = UDim.new(0, 10 / 2),
-				PaddingBottom = UDim.new(0, 10 / 2),
-			}),
-			New("UIListLayout", {
-				FillDirection = "Vertical",
-				Padding = UDim.new(0, 10 / 2),
-			}),
-		})
-
-		local DropdownContainer = New("Frame", {
-			BackgroundTransparency = 1,
-			Size = UDim2.new(0, Width, 0, 0),
-			ClipsDescendants = true,
-			AnchorPoint = Vector2.new(1, 0),
-			Parent = ButtonFrame,
-			Position = UDim2.new(1, 0, 1, 15),
-		}, {
-			DropdownFrame,
-		})
-
-		New("TextLabel", {
-			Text = "Select Service",
-			BackgroundTransparency = 1,
-			FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-			ThemeTag = { TextColor3 = "Text" },
-			TextTransparency = 0.2,
-			TextSize = 16,
-			Size = UDim2.new(1, 0, 0, 0),
-			AutomaticSize = "Y",
-			TextWrapped = true,
-			TextXAlignment = "Left",
-			Parent = DropdownFrame,
-		}, {
-			New("UIPadding", {
-				PaddingTop = UDim.new(0, 10),
-				PaddingLeft = UDim.new(0, 10),
-				PaddingRight = UDim.new(0, 10),
-				PaddingBottom = UDim.new(0, 10),
-			}),
-		})
-
-		for _, i in next, Config.KeySystem.API do
-			local serviceDef = Config.WindUI.Services[i.Type]
-			if serviceDef then
-				local args = {}
-				for _, argName in next, serviceDef.Args do
-					table.insert(args, i[argName])
-				end
-
-				local serviceInstance = serviceDef.New(table.unpack(args))
-				serviceInstance.Type = i.Type
-				table.insert(Services, serviceInstance)
-
-				local IconFrame = Creator.Image(
-					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
-					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
-					0,
-					"Temp",
-					"KeySystem",
-					true
-				)
-				IconFrame.Size = UDim2.new(0, 24, 0, 24)
-
-				local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
-					Size = UDim2.new(1, 0, 0, 0),
-					ThemeTag = { ImageColor3 = "Text" },
-					ImageTransparency = 1,
-					Parent = DropdownFrame,
-					AutomaticSize = "Y",
-				}, {
-					New("UIListLayout", {
-						FillDirection = "Horizontal",
-						Padding = UDim.new(0, 10),
-						VerticalAlignment = "Center",
-					}),
-					IconFrame,
-					New("UIPadding", {
-						PaddingTop = UDim.new(0, 10),
-						PaddingLeft = UDim.new(0, 10),
-						PaddingRight = UDim.new(0, 10),
-						PaddingBottom = UDim.new(0, 10),
-					}),
-					New("Frame", {
-						BackgroundTransparency = 1,
-						Size = UDim2.new(1, -24 - 10, 0, 0),
-						AutomaticSize = "Y",
-					}, {
-						New("UIListLayout", {
-							FillDirection = "Vertical",
-							Padding = UDim.new(0, 5),
-							HorizontalAlignment = "Center",
-						}),
-						New("TextLabel", {
-							Text = i.Title or serviceDef.Name,
-							BackgroundTransparency = 1,
-							FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-							ThemeTag = { TextColor3 = "Text" },
-							TextTransparency = 0.05,
-							TextSize = 18,
-							Size = UDim2.new(1, 0, 0, 0),
-							AutomaticSize = "Y",
-							TextWrapped = true,
-							TextXAlignment = "Left",
-						}),
-						New("TextLabel", {
-							Text = i.Desc or "",
-							BackgroundTransparency = 1,
-							FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
-							ThemeTag = { TextColor3 = "Text" },
-							TextTransparency = 0.2,
-							TextSize = 16,
-							Size = UDim2.new(1, 0, 0, 0),
-							AutomaticSize = "Y",
-							TextWrapped = true,
-							Visible = i.Desc and true or false,
-							TextXAlignment = "Left",
-						}),
-					}),
-				}, true)
-
-				Creator.AddSignal(APIFrame.MouseEnter, function()
-					Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
-				end)
-				Creator.AddSignal(APIFrame.InputEnded, function()
-					Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
-				end)
-				Creator.AddSignal(APIFrame.MouseButton1Click, function()
-					serviceInstance.Copy()
-					Config.WindUI:Notify({
-						Title = "Key System",
-						Content = "Key link copied to clipboard.",
-						Image = "key",
-					})
-				end)
-			end
-		end
-
-		Creator.AddSignal(ButtonFrame.MouseButton1Click, function()
-			if not Opened then
-				Tween(
-					DropdownContainer,
-					0.3,
-					{ Size = UDim2.new(0, Width, 0, DropdownFrame.AbsoluteSize.Y + 1) },
-					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
-				Tween(ChevronDown, 0.3, { Rotation = 180 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
-			else
-				Tween(
-					DropdownContainer,
-					0.25,
-					{ Size = UDim2.new(0, Width, 0, 0) },
-					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
-				Tween(ChevronDown, 0.25, { Rotation = 0 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
-			end
-			Opened = not Opened
+local function notify(ForktUI, title, content, icon)
+	if ForktUI and type(ForktUI.Notify) == "function" then
+		pcall(function()
+			ForktUI:Notify({ Title = title, Content = tostring(content or ""), Icon = icon or "key-round" })
 		end)
 	end
+end
 
-	local function handleSuccess(key)
-		KeyDialog:Close()()
-		writefile((Config.Folder or "Temp") .. "/" .. Filename .. ".key", tostring(key))
-		task.wait(0.4)
-		func(true)
+local function copyText(value)
+	local candidates = { setclipboard, toclipboard, set_clipboard }
+	for _, copyFn in pairs(candidates) do
+		if type(copyFn) == "function" then
+			local ok, result = pcall(copyFn, tostring(value))
+			if ok and result ~= false then return true end
+		end
+	end
+	return false
+end
+
+local function ensureFolder(path)
+	if type(path) ~= "string" or path == "" then return false end
+	if type(makefolder) ~= "function" then return false end
+	if type(isfolder) == "function" then
+		local ok, exists = pcall(isfolder, path)
+		if ok and exists then return true end
+	end
+	local ok = pcall(makefolder, path)
+	if ok then return true end
+	return type(isfolder) == "function" and select(2, pcall(isfolder, path)) == true
+end
+
+local function saveKey(config, filename, value)
+	local keyConfig = type(config.KeySystem) == "table" and config.KeySystem or {}
+	if keyConfig.SaveKey ~= true then return true end
+	if type(writefile) ~= "function" then return false end
+
+	local folder = tostring(config.Folder or "Temp")
+	local path = folder .. "/" .. tostring(filename) .. ".key"
+	if folder:find("/", 1, true) then
+		local current = ""
+		for part in folder:gmatch("[^/]+") do
+			current = current == "" and part or (current .. "/" .. part)
+			ensureFolder(current)
+		end
+	else
+		ensureFolder(folder)
 	end
 
-	local SubmitButton = CreateButton("Submit", "arrow-right", function()
-		local key = tostring(EnteredKey or "empty")
-		local folder = Config.Folder or Config.Title
+	local ok = pcall(writefile, path, tostring(value))
+	return ok
+end
 
-		if Config.KeySystem.KeyValidator then
-			local isValid = Config.KeySystem.KeyValidator(key)
+local function makeLabel(text, size, transparency, weight, colorTag)
+	return New("TextLabel", {
+		Text = text,
+		TextSize = size,
+		TextTransparency = transparency or 0,
+		FontFace = Font.new(Creator.Font, weight or Enum.FontWeight.Regular),
+		ThemeTag = { TextColor3 = colorTag or "Text" },
+		BackgroundTransparency = 1,
+		AutomaticSize = "Y",
+		Size = UDim2.new(1, 0, 0, 0),
+		TextWrapped = true,
+		TextXAlignment = "Left",
+	})
+end
 
-			if isValid then
-				if Config.KeySystem.SaveKey then
-					handleSuccess(key)
-				else
-					KeyDialog:Close()()
-					task.wait(0.4)
-					func(true)
+function KeySystem.new(Config, Filename, callback)
+	local KeyConfig = type(Config.KeySystem) == "table" and Config.KeySystem or {}
+	local ForktUI = Config.ForktUI
+	local DialogModule = require("./window/Dialog")
+	local Dialog = DialogModule.Create(true, "Popup", Config.Window, ForktUI, ForktUI.ScreenGui.KeySystem)
+	local Main = Dialog.UIElements.Main
+
+	Main.AutomaticSize = "Y"
+	Main.Size = UDim2.new(0, 440, 0, 0)
+
+	local finished = false
+	local submitting = false
+	local enteredKey = ""
+	local services = {}
+	local serviceLastError = nil
+
+	local function resolve(accepted)
+		if finished then return end
+		finished = true
+		pcall(function() Dialog:Close() end)
+		if type(callback) == "function" then
+			task.spawn(function()
+				task.wait(0.12)
+					pcall(callback, accepted == true)
+			end)
+		end
+	end
+
+	local Content = New("Frame", {
+		Name = "ForktUIAccessPanel",
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = "Y",
+		BackgroundTransparency = 1,
+		Parent = Main,
+	}, {
+		New("UIListLayout", {
+			FillDirection = "Vertical",
+			SortOrder = "LayoutOrder",
+			Padding = UDim.new(0, 12),
+		}),
+		New("UIPadding", {
+			PaddingTop = UDim.new(0, 22),
+			PaddingBottom = UDim.new(0, 20),
+			PaddingLeft = UDim.new(0, 22),
+			PaddingRight = UDim.new(0, 22),
+		}),
+	})
+
+	local thumbnail = type(KeyConfig.Thumbnail) == "table" and KeyConfig.Thumbnail or nil
+	if thumbnail and thumbnail.Image then
+		local image = thumbnail.Image
+		if type(image) == "number" then image = "rbxassetid://" .. tostring(image) end
+		local ThumbnailFrame = New("ImageLabel", {
+			Name = "AccessThumbnail",
+			Image = tostring(image),
+			ScaleType = Enum.ScaleType.Crop,
+			Size = UDim2.new(1, 0, 0, 104),
+			BackgroundTransparency = 1,
+			LayoutOrder = 0,
+			Parent = Content,
+		}, {
+			New("UICorner", { CornerRadius = UDim.new(0, 10) }),
+		})
+		if type(thumbnail.Title) == "string" and thumbnail.Title ~= "" then
+			local thumbnailTitle = makeLabel(thumbnail.Title, 15, 0, Enum.FontWeight.SemiBold)
+			thumbnailTitle.Size = UDim2.new(1, -24, 0, 26)
+			thumbnailTitle.AutomaticSize = "None"
+			thumbnailTitle.Position = UDim2.new(0, 12, 0.5, 0)
+			thumbnailTitle.AnchorPoint = Vector2.new(0, 0.5)
+			thumbnailTitle.TextYAlignment = Enum.TextYAlignment.Center
+			thumbnailTitle.TextStrokeTransparency = 0.55
+			thumbnailTitle.Parent = ThumbnailFrame
+		end
+	end
+
+	local Header = New("Frame", {
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, 62),
+		BackgroundTransparency = 1,
+		LayoutOrder = 1,
+	}, {
+		New("Frame", {
+			Name = "BrandMarker",
+			Size = UDim2.new(0, 4, 0, 42),
+			Position = UDim2.new(0, 0, 0.5, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			ThemeTag = { BackgroundColor3 = "Primary" },
+			BorderSizePixel = 0,
+		}, { New("UICorner", { CornerRadius = UDim.new(1, 0) }) }),
+		New("Frame", {
+			Size = UDim2.new(1, -18, 1, 0),
+			Position = UDim2.new(0, 18, 0, 0),
+			BackgroundTransparency = 1,
+		}, {
+			New("UIListLayout", {
+				FillDirection = "Vertical",
+				SortOrder = "LayoutOrder",
+				Padding = UDim.new(0, 5),
+				VerticalAlignment = "Center",
+			}),
+			makeLabel("FORKTUI  /  ACCESS CONTROL", 10, 0.35, Enum.FontWeight.Bold, "Primary"),
+			makeLabel(KeyConfig.Title or "Verify access key", 22, 0, Enum.FontWeight.SemiBold),
+		}),
+	})
+	Header.Parent = Content
+
+	local Description = makeLabel(
+		type(KeyConfig.Note) == "string" and KeyConfig.Note ~= "" and KeyConfig.Note
+			or "Enter your access key to continue. ForktUI will check it against the configured access rule.",
+		14,
+		0.28,
+		Enum.FontWeight.Regular
+	)
+	Description.LayoutOrder = 2
+	Description.Parent = Content
+
+	local InputHeading = makeLabel("ACCESS KEY", 10, 0.25, Enum.FontWeight.Bold, "Primary")
+	InputHeading.LayoutOrder = 3
+	InputHeading.Parent = Content
+
+	local InputFrame = CreateInput("Paste your access key", "key-round", nil, "Input", function(value)
+		enteredKey = value
+	end, false, 12, false, true)
+	InputFrame.Name = "AccessKeyInput"
+	InputFrame.LayoutOrder = 4
+	InputFrame.Parent = Content
+
+	local providerHeader
+	local ProviderList
+	local function addProviderButton(title, icon, action)
+		local button = CreateButton(title, icon or "external-link", action, "Secondary", ProviderList)
+		button.Size = UDim2.new(1, 0, 0, 38)
+		button.AutomaticSize = "None"
+		button.LayoutOrder = #services
+		return button
+	end
+
+	if type(KeyConfig.API) == "table" and #KeyConfig.API > 0 then
+		providerHeader = makeLabel("KEY PROVIDERS", 10, 0.25, Enum.FontWeight.Bold, "Primary")
+		providerHeader.LayoutOrder = 5
+		providerHeader.Parent = Content
+
+		ProviderList = New("Frame", {
+			Name = "ProviderList",
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = "Y",
+				BackgroundTransparency = 1,
+				LayoutOrder = 6,
+			}, {
+				New("UIListLayout", {
+					FillDirection = "Vertical",
+					SortOrder = "LayoutOrder",
+					Padding = UDim.new(0, 6),
+				}),
+			})
+		ProviderList.Parent = Content
+
+		for _, item in ipairs(KeyConfig.API) do
+			if type(item) == "table" and type(item.Type) == "string" then
+				local serviceDef = ForktUI.Services and ForktUI.Services[item.Type]
+				if serviceDef and type(serviceDef.New) == "function" then
+					local args = {}
+					local serviceArgs = type(serviceDef.Args) == "table" and serviceDef.Args or {}
+					for _, argName in ipairs(serviceArgs) do
+						table.insert(args, item[argName])
+					end
+					local ok, service = pcall(function()
+						return serviceDef.New(table.unpack(args))
+					end)
+					if ok and type(service) == "table" then
+						service.Type = item.Type
+						table.insert(services, service)
+						local providerName = item.Title or serviceDef.Name or item.Type
+						addProviderButton(providerName, item.Icon or serviceDef.Icon, function()
+							if type(service.Copy) ~= "function" then
+								notify(ForktUI, "Provider unavailable", "This provider does not expose a copy action.", "circle-alert")
+								return
+							end
+							local copyOk, copyResult = pcall(service.Copy)
+							if copyOk then
+								notify(ForktUI, "Provider ready", "The provider action was opened or copied.", "check-circle-2")
+							else
+								notify(ForktUI, "Provider error", copyResult, "circle-alert")
+							end
+						end)
+					else
+						serviceLastError = service
+					end
 				end
-			else
-				Config.WindUI:Notify({
-					Title = "Key System. Error",
-					Content = "Invalid key.",
-					Icon = "triangle-alert",
-				})
-			end
-		elseif not Config.KeySystem.API then
-			local isKey = type(Config.KeySystem.Key) == "table" and table.find(Config.KeySystem.Key, key)
-				or Config.KeySystem.Key == key
-
-			if isKey then
-				if Config.KeySystem.SaveKey then
-					handleSuccess(key)
-				else
-					KeyDialog:Close()()
-					task.wait(0.4)
-					func(true)
-				end
-			end
-		else
-			local isSuccess, result
-			for _, service in next, Services do
-				local success, res = service.Verify(key)
-				if success then
-					isSuccess, result = true, res
-					break
-				end
-				result = res
-			end
-
-			if isSuccess then
-				handleSuccess(key)
-			else
-				Config.WindUI:Notify({
-					Title = "Key System. Error",
-					Content = result,
-					Icon = "triangle-alert",
-				})
 			end
 		end
-	end, "Primary", ButtonsContainer)
+	end
 
-	SubmitButton.AnchorPoint = Vector2.new(1, 0.5)
-	SubmitButton.Position = UDim2.new(1, 0, 0.5, 0)
+	if type(KeyConfig.URL) == "string" and KeyConfig.URL ~= "" then
+		local urlOrder = type(KeyConfig.API) == "table" and #KeyConfig.API > 0 and 7 or 5
+		local getKeyButton = CreateButton("Copy key link", "link", function()
+			if copyText(KeyConfig.URL) then
+				notify(ForktUI, "Link copied", "The key link is ready to paste.", "check-circle-2")
+			else
+				notify(ForktUI, "Clipboard unavailable", "Copy this link manually: " .. KeyConfig.URL, "clipboard")
+			end
+		end, "Secondary", Content)
+		getKeyButton.Size = UDim2.new(1, 0, 0, 40)
+		getKeyButton.AutomaticSize = "None"
+		getKeyButton.LayoutOrder = urlOrder
+	end
 
-	-- TitleContainer:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-	--     KeyDialog.UIElements.Main.Size = UDim2.new(
-	--         0,
-	--         TitleContainer.AbsoluteSize.X +24+24+24+24+9,
-	--         0,
-	--         0
-	--     )
-	-- end)
+	local Actions = New("Frame", {
+		Name = "Actions",
+		Size = UDim2.new(1, 0, 0, 42),
+		BackgroundTransparency = 1,
+		LayoutOrder = 8,
+		Parent = Content,
+	}, {
+		New("UIListLayout", {
+			FillDirection = "Horizontal",
+			SortOrder = "LayoutOrder",
+			Padding = UDim.new(0, 8),
+		}),
+	})
 
-	KeyDialog:Open()
+	local SubmitButton = CreateButton("Continue", "arrow-right", function()
+		if submitting or finished then return end
+		submitting = true
+		local key = trim(enteredKey)
+		if key == "" then
+			submitting = false
+			notify(ForktUI, "Key required", "Enter your key before continuing.", "circle-alert")
+			return
+		end
+
+		local valid = false
+		local failureMessage = "The key was not accepted. Check it and try again."
+
+		if type(KeyConfig.KeyValidator) == "function" then
+			local ok, result = pcall(KeyConfig.KeyValidator, key)
+			valid = ok and result == true
+			if not ok then
+				failureMessage = "The key validator returned an error: " .. tostring(result)
+			end
+		elseif type(KeyConfig.API) ~= "table" or #KeyConfig.API == 0 then
+			local keys = KeyConfig.Key
+			if type(keys) == "table" then
+				for _, candidate in pairs(keys) do
+					if tostring(candidate) == key then valid = true; break end
+				end
+			else
+				valid = keys ~= nil and tostring(keys) == key
+			end
+		else
+			for _, service in ipairs(services) do
+				if type(service.Verify) == "function" then
+					local ok, result, message = pcall(service.Verify, key)
+					if ok and result then
+						valid = true
+						break
+					end
+					if not ok then
+						failureMessage = tostring(result)
+					elseif message then
+						failureMessage = tostring(message)
+					end
+				end
+			end
+			if #services == 0 and serviceLastError then
+				failureMessage = "A configured key provider could not be initialized."
+			end
+		end
+
+		if valid then
+			if KeyConfig.SaveKey == true and not saveKey(Config, Filename, key) then
+				notify(ForktUI, "Key accepted", "Access was granted, but this executor could not save the key.", "check-circle-2")
+			end
+			submitting = false
+			resolve(true)
+		else
+			submitting = false
+			notify(ForktUI, "Verification failed", failureMessage, "shield-alert")
+		end
+	end, "Primary", Actions)
+	SubmitButton.Size = UDim2.new(0.66, -4, 0, 42)
+	SubmitButton.AutomaticSize = "None"
+	SubmitButton.LayoutOrder = 1
+
+	local ExitButton = CreateButton("Exit", "x", function()
+		resolve(false)
+	end, "Secondary", Actions)
+	ExitButton.Size = UDim2.new(0.34, -4, 0, 42)
+	ExitButton.AutomaticSize = "None"
+	ExitButton.LayoutOrder = 2
+
+	local Footer = makeLabel("FORKTUI  •  ACCESS GATE", 9, 0.58, Enum.FontWeight.Medium, "Text")
+	Footer.TextXAlignment = "Center"
+	Footer.LayoutOrder = 9
+	Footer.Parent = Content
+
+	Dialog:Open()
+	return Dialog
 end
 
 return KeySystem
