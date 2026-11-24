@@ -4,7 +4,7 @@
     "main": "./dist/main.lua",
     "repository": "https://github.com/HamZyy4/ForktUI",
     "author": "sukitovone",
-    "description": "A modular, graphite-themed UI library for Roblox experiences",
+    "description": "A modular, responsive graphite interface toolkit for Roblox client experiences, maintained by sukitovone.",
     "license": "MIT",
     "scripts": {
         "dev": "bash build/build.sh dev $INPUT_FILE",
@@ -25,5 +25,6 @@
     "devDependencies": {
         "chokidar-cli": "^3.0.0",
         "concurrently": "^9.2.0"
-    }
+    },
+    "homepage": "https://github.com/HamZyy4/ForktUI#readme"
 }

@@ -20,6 +20,7 @@ function DialogModule.Create(Key, Type, Window, ForktUI, Parent)
 		ForktUI = ForktUI,
 
 		UIElements = {},
+		Closed = false,
 	}
 
 	if Key then
@@ -31,20 +32,40 @@ function DialogModule.Create(Key, Type, Window, ForktUI, Parent)
 
 	Type = Type or "Dialog"
 
+	local viewportWidth = 390
+	pcall(function()
+		local camera = workspace.CurrentCamera
+		if camera then
+			viewportWidth = camera.ViewportSize.X
+		end
+	end)
+	local dialogWidth = math.clamp(viewportWidth - 24, 240, 460)
+
 	if not Key then
 		Dialog.UIElements.FullScreen = New("Frame", {
+			Name = "DialogBackdrop",
 			ZIndex = 999,
-			BackgroundTransparency = 1, -- 0.65
+			BackgroundTransparency = 1,
 			BackgroundColor3 = Color3.fromHex("#000000"),
 			Size = UDim2.new(1, 0, 1, 0),
-			Active = false, -- true
-			Visible = false, -- true
+			Active = true,
+			Visible = false,
 			Parent = DialogModule.Parent
 				or (Window and Window.UIElements and Window.UIElements.Main and Window.UIElements.Main.Main),
 		}, {
 			New("UICorner", {
 				CornerRadius = UDim.new(0, Window.UICorner),
 			}),
+		})
+
+		Dialog.UIElements.BackdropButton = New("TextButton", {
+			Name = "BackdropButton",
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			AutoButtonColor = false,
+			ZIndex = 999,
+			Parent = Dialog.UIElements.FullScreen,
 		})
 	end
 
@@ -65,7 +86,7 @@ function DialogModule.Create(Key, Type, Window, ForktUI, Parent)
 	})
 
 	Dialog.UIElements.Main = New("Frame", {
-		Size = UDim2.new(0, 280, 0, 0),
+		Size = UDim2.new(0, dialogWidth, 0, 0),
 		ThemeTag = {
 			BackgroundColor3 = Type .. "Background",
 		},
@@ -126,51 +147,61 @@ function DialogModule.Create(Key, Type, Window, ForktUI, Parent)
 	})
 
 	function Dialog:Open()
-		if not Key then
+		if Dialog.Closed then
+			return false
+		end
+
+		if not Key and Dialog.UIElements.FullScreen then
 			Dialog.UIElements.FullScreen.Visible = true
 			Dialog.UIElements.FullScreen.Active = true
 		end
 
-		task.spawn(function()
-			Dialog.UIElements.MainContainer.Visible = true
-
-			if not Key then
-				Tween(Dialog.UIElements.FullScreen, 0.1, { BackgroundTransparency = 0.65 }):Play()
-			end
-			Tween(Dialog.UIElements.MainContainer, 0.1, { ImageTransparency = 0 }):Play()
-			--Tween(Dialog.UIElements.MainContainer.UIScale, 0.1, {Scale = 1}):Play()
-			--Tween(Dialog.UIElements.MainContainer.UIStroke, 0.1, {Transparency = 1}):Play()
-			task.spawn(function()
-				task.wait(0.05)
-				Dialog.UIElements.Main.Visible = true
-			end)
-		end)
-	end
-	function Dialog:Close()
-		if not Key then
-			Tween(Dialog.UIElements.FullScreen, 0.1, { BackgroundTransparency = 1 }):Play()
-			Dialog.UIElements.FullScreen.Active = false
-			task.spawn(function()
-				task.wait(0.1)
-				Dialog.UIElements.FullScreen.Visible = false
-			end)
+		Dialog.UIElements.MainContainer.Visible = true
+		if not Key and Dialog.UIElements.FullScreen then
+			Tween(Dialog.UIElements.FullScreen, 0.16, { BackgroundTransparency = 0.58 }):Play()
 		end
-		Dialog.UIElements.Main.Visible = false
+		Tween(Dialog.UIElements.MainContainer, 0.16, { ImageTransparency = 0 }):Play()
+		task.delay(0.04, function()
+			if not Dialog.Closed and Dialog.UIElements.Main and Dialog.UIElements.Main.Parent then
+				Dialog.UIElements.Main.Visible = true
+			end
+		end)
+		return true
+	end
 
-		Tween(Dialog.UIElements.MainContainer, 0.1, { ImageTransparency = 1 }):Play()
-		--Tween(Dialog.UIElements.MainContainer.UIScale, 0.1, {Scale = .9}):Play()
-		--Tween(Dialog.UIElements.MainContainer.UIStroke, 0.1, {Transparency = 1}):Play()
+	function Dialog:Close()
+		if Dialog.Closed then
+			return function() end
+		end
+		Dialog.Closed = true
 
-		task.spawn(function()
-			task.wait(0.1)
-			if not Key then
-				Dialog.UIElements.FullScreen:Destroy()
-			else
+		if Dialog.UIElements.Main then
+			Dialog.UIElements.Main.Visible = false
+		end
+		if Dialog.UIElements.FullScreen and Dialog.UIElements.FullScreen.Parent then
+			Tween(Dialog.UIElements.FullScreen, 0.12, { BackgroundTransparency = 1 }):Play()
+			Dialog.UIElements.FullScreen.Active = false
+		end
+		if Dialog.UIElements.MainContainer and Dialog.UIElements.MainContainer.Parent then
+			Tween(Dialog.UIElements.MainContainer, 0.12, { ImageTransparency = 1 }):Play()
+		end
+
+		task.delay(0.14, function()
+			if Dialog.UIElements.MainContainer and Dialog.UIElements.MainContainer.Parent then
 				Dialog.UIElements.MainContainer:Destroy()
+			end
+			if Dialog.UIElements.FullScreen and Dialog.UIElements.FullScreen.Parent then
+				Dialog.UIElements.FullScreen:Destroy()
 			end
 		end)
 
 		return function() end
+	end
+
+	if Dialog.UIElements.BackdropButton then
+		Creator.AddSignal(Dialog.UIElements.BackdropButton.Activated, function()
+			Dialog:Close()
+		end)
 	end
 
 	--Dialog:Open()

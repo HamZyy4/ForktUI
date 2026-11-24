@@ -25,8 +25,7 @@
   <circle cx="1260" cy="290" r="300" fill="#A8B0BC" fill-opacity=".07"/>
   <ellipse cx="1200" cy="350" rx="260" ry="175" fill="#000" fill-opacity=".6" filter="url(#shadow)"/>
   <g transform="translate(104 112)">
-    <rect x="0" y="0" width="50" height="50" rx="14" fill="#292E37" stroke="#AEB5C0" stroke-opacity=".35"/>
-    <path d="M15 11H37V18H23V24H35V31H23V40H15V11Z" fill="#F2F3F5"/>
+    <image href="https://www.image2url.com/r2/default/images/1795519428668-08e17509-eb29-45cf-b1a2-7ddb06372b47.png" x="0" y="0" width="50" height="50" preserveAspectRatio="xMidYMid meet" />
     <text x="70" y="34" fill="#9DA5B1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="4">ROBLOX UI FRAMEWORK</text>
     <text x="0" y="164" fill="#F2F3F5" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="102" font-weight="750" letter-spacing="-7">FORKTUI</text>
     <text x="5" y="220" fill="#B5BBC5" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="27" font-weight="500">A refined interface toolkit for Roblox experiences.</text>

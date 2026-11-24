@@ -24,7 +24,7 @@ function Element:New(Config)
 		Icons = Config.Icons or nil,
 		IsTooltip = Config.IsTooltip or false,
 		IsTextbox = Config.IsTextbox,
-		Step = Config.Step or 1,
+		Step = tonumber(Config.Step) or 1,
 		Callback = Config.Callback or function() end,
 		UIElements = {},
 		IsFocusing = false,
@@ -49,13 +49,27 @@ function Element:New(Config)
 	local isTouch
 	local moveconnection
 	local releaseconnection
-	local Value = Slider.Value.Default or Slider.Value.Min or 0
+	local destroyed = false
+	local minimum = tonumber(Slider.Value.Min) or 0
+	local maximum = tonumber(Slider.Value.Max) or 100
+	if maximum <= minimum then
+		maximum = minimum + 1
+		warn("ForktUI Slider: Max must be greater than Min; adjusted the range.")
+	end
+	if Slider.Step <= 0 then
+		Slider.Step = 1
+		warn("ForktUI Slider: Step must be positive; using 1.")
+	end
+	Slider.Value.Min = minimum
+	Slider.Value.Max = maximum
+	local Value = math.clamp(tonumber(Slider.Value.Default) or minimum, minimum, maximum)
+	Slider.Value.Default = Value
 
 	local LastValue = Value
-	local delta = (Value - (Slider.Value.Min or 0)) / ((Slider.Value.Max or 100) - (Slider.Value.Min or 0))
+	local delta = (Value - minimum) / (maximum - minimum)
 
 	local CanCallback = true
-	local IsFloat = Slider.Step % 1 ~= 0
+	local IsFloat = Slider.Step % 1 ~= 0 or minimum % 1 ~= 0 or maximum % 1 ~= 0
 
 	local function FormatValue(val)
 		if IsFloat then
@@ -65,11 +79,25 @@ function Element:New(Config)
 	end
 
 	local function CalculateValue(rawValue)
-		if IsFloat then
-			return math.floor(rawValue / Slider.Step + 0.5) * Slider.Step
-		else
-			return math.floor(rawValue / Slider.Step + 0.5) * Slider.Step
+		local steps = math.floor((rawValue - Slider.Value.Min) / Slider.Step + 0.5)
+		local value = Slider.Value.Min + steps * Slider.Step
+		return math.clamp(value, Slider.Value.Min, Slider.Value.Max)
+	end
+
+	Value = CalculateValue(Value)
+	Slider.Value.Default = Value
+	LastValue = Value
+	delta = (Value - minimum) / (maximum - minimum)
+
+	local function GetInputDelta(input)
+		local width = Slider.UIElements.SliderIcon.AbsoluteSize.X
+		if width <= 0 then
+			return nil
 		end
+		local position = input.UserInputType == Enum.UserInputType.Touch
+			and input.Position.X
+			or UserInputService:GetMouseLocation().X
+		return math.clamp((position - Slider.UIElements.SliderIcon.AbsolutePosition.X) / width, 0, 1)
 	end
 
 	local IconFrom, IconTo
@@ -227,8 +255,47 @@ function Element:New(Config)
 
 	--local ScrollingFrameParent = Slider.SliderFrame.Parent:IsA("ScrollingFrame") and Slider.SliderFrame.Parent or Slider.SliderFrame.Parent.Parent.Parent
 	local ScrollingFrameParent = Config.Tab.UIElements.ContainerFrame
+	local CurInput = Config.ForktUI.GenerateGUID()
+	local previousScrollingEnabled = true
+
+	local function StopDragging(destroyTooltip)
+		if moveconnection then
+			moveconnection:Disconnect()
+			moveconnection = nil
+		end
+		if releaseconnection then
+			releaseconnection:Disconnect()
+			releaseconnection = nil
+		end
+		if IsSliderHolding then
+			IsSliderHolding = false
+			if ScrollingFrameParent and ScrollingFrameParent.Parent then
+				ScrollingFrameParent.ScrollingEnabled = previousScrollingEnabled
+			end
+		end
+		if Config.ForktUI.CurrentInput == CurInput then
+			Config.ForktUI.CurrentInput = nil
+		end
+		isTouch = nil
+		if Tooltip then
+			if destroyTooltip then
+				task.spawn(function()
+					pcall(Tooltip.Close, Tooltip, true)
+				end)
+			else
+				pcall(Tooltip.Close, Tooltip, false)
+			end
+		end
+	end
 
 	function Slider:Set(Value, input)
+		if destroyed then
+			return false
+		end
+		Value = tonumber(Value)
+		if not Value then
+			return false
+		end
 		if CanCallback then
 			if
 				not Slider.IsFocusing
@@ -243,21 +310,23 @@ function Element:New(Config)
 			then
 				if input then
 					isTouch = (input.UserInputType == Enum.UserInputType.Touch)
-					ScrollingFrameParent.ScrollingEnabled = false
+					if ScrollingFrameParent and ScrollingFrameParent.Parent then
+						previousScrollingEnabled = ScrollingFrameParent.ScrollingEnabled
+						ScrollingFrameParent.ScrollingEnabled = false
+					end
 					IsSliderHolding = true
 
-					local inputPosition = isTouch and input.Position.X or UserInputService:GetMouseLocation().X
-					local delta = math.clamp(
-						(inputPosition - Slider.UIElements.SliderIcon.AbsolutePosition.X)
-							/ Slider.UIElements.SliderIcon.AbsoluteSize.X,
-						0,
-						1
-					)
+					local delta = GetInputDelta(input)
+					if delta == nil then
+						StopDragging(false)
+						return false
+					end
 					Value = CalculateValue(Slider.Value.Min + delta * (Slider.Value.Max - Slider.Value.Min))
-					Value = math.clamp(Value, Slider.Value.Min or 0, Slider.Value.Max or 100)
+					Value = math.clamp(Value, Slider.Value.Min, Slider.Value.Max)
+					delta = math.clamp((Value - Slider.Value.Min) / (Slider.Value.Max - Slider.Value.Min), 0, 1)
 
 					if Value ~= LastValue then
-						Tween(Slider.UIElements.SliderIcon.Frame, 0.05, { Size = UDim2.new(delta, 0, 1, 0) }):Play()
+						Slider.UIElements.SliderIcon.Frame.Size = UDim2.new(delta, 0, 1, 0)
 						Slider.UIElements.SliderContainer.TextBox.Text = FormatValue(Value)
 						if Tooltip then
 							Tooltip.TitleFrame.Text = FormatValue(Value)
@@ -268,17 +337,17 @@ function Element:New(Config)
 					end
 
 					moveconnection = RunService.RenderStepped:Connect(function()
-						local inputPosition = isTouch and input.Position.X or UserInputService:GetMouseLocation().X
-						local delta = math.clamp(
-							(inputPosition - Slider.UIElements.SliderIcon.AbsolutePosition.X)
-								/ Slider.UIElements.SliderIcon.AbsoluteSize.X,
-							0,
-							1
-						)
+						local delta = GetInputDelta(input)
+						if delta == nil then
+							StopDragging(false)
+							return
+						end
 						Value = CalculateValue(Slider.Value.Min + delta * (Slider.Value.Max - Slider.Value.Min))
+						Value = math.clamp(Value, Slider.Value.Min, Slider.Value.Max)
+						delta = math.clamp((Value - Slider.Value.Min) / (Slider.Value.Max - Slider.Value.Min), 0, 1)
 
 						if Value ~= LastValue then
-							Tween(Slider.UIElements.SliderIcon.Frame, 0.05, { Size = UDim2.new(delta, 0, 1, 0) }):Play()
+							Slider.UIElements.SliderIcon.Frame.Size = UDim2.new(delta, 0, 1, 0)
 							Slider.UIElements.SliderContainer.TextBox.Text = FormatValue(Value)
 							if Tooltip then
 								Tooltip.TitleFrame.Text = FormatValue(Value)
@@ -297,12 +366,7 @@ function Element:New(Config)
 								or endInput.UserInputType == Enum.UserInputType.Touch
 							) and input == endInput
 						then
-							moveconnection:Disconnect()
-							releaseconnection:Disconnect()
-							IsSliderHolding = false
-							ScrollingFrameParent.ScrollingEnabled = true
-
-							Config.ForktUI.CurrentInput = nil
+							StopDragging(false)
 
 							if Config.Window.NewElements then
 								Tween(Slider.UIElements.SliderIcon.Frame.Thumb, 0.2, {
@@ -315,9 +379,6 @@ function Element:New(Config)
 									),
 								}, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut):Play()
 							end
-							if Tooltip then
-								Tooltip:Close(false)
-							end
 						end
 					end)
 				else
@@ -329,6 +390,8 @@ function Element:New(Config)
 						1
 					)
 					Value = CalculateValue(Slider.Value.Min + delta * (Slider.Value.Max - Slider.Value.Min))
+					Value = math.clamp(Value, Slider.Value.Min, Slider.Value.Max)
+					delta = math.clamp((Value - Slider.Value.Min) / (Slider.Value.Max - Slider.Value.Min), 0, 1)
 
 					if Value ~= LastValue then
 						Tween(Slider.UIElements.SliderIcon.Frame, 0.05, { Size = UDim2.new(delta, 0, 1, 0) }):Play()
@@ -346,6 +409,10 @@ function Element:New(Config)
 	end
 
 	function Slider:SetMax(newMax)
+		newMax = tonumber(newMax)
+		if not newMax or newMax <= (Slider.Value.Min or 0) then
+			return false
+		end
 		Slider.Value.Max = newMax
 
 		local currentValue = tonumber(Slider.Value.Default) or LastValue
@@ -359,6 +426,10 @@ function Element:New(Config)
 	end
 
 	function Slider:SetMin(newMin)
+		newMin = tonumber(newMin)
+		if not newMin or newMin >= (Slider.Value.Max or 100) then
+			return false
+		end
 		Slider.Value.Min = newMin
 
 		local currentValue = tonumber(Slider.Value.Default) or LastValue
@@ -382,9 +453,21 @@ function Element:New(Config)
 		end
 	end)
 
-	local CurInput = Config.ForktUI.GenerateGUID()
+	function Slider:Destroy()
+		if destroyed then
+			return
+		end
+		destroyed = true
+		StopDragging(true)
+		if Slider.SliderFrame and type(Slider.SliderFrame.Destroy) == "function" then
+			Slider.SliderFrame:Destroy()
+		end
+	end
 
 	Creator.AddSignal(Slider.UIElements.SliderContainer.InputBegan, function(input)
+		if destroyed then
+			return
+		end
 		if Slider.Locked or IsSliderHolding then
 			return
 		end
@@ -398,6 +481,9 @@ function Element:New(Config)
 			Config.ForktUI.CurrentInput = CurInput
 
 			Slider:Set(Value, input)
+			if not IsSliderHolding then
+				return
+			end
 
 			-- drag slider
 			if Config.Window.NewElements then

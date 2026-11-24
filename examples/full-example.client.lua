@@ -867,350 +867,250 @@ do
 end
 
 -- */  Config Usage  /* --
-if not RunService:IsStudio() and writefile and printidentity() then
-	do -- config elements
-		local ConfigElementsTab = ConfigUsageSection:Tab({
-			Title = "Config Elements",
-			Icon = "solar:file-text-bold",
-			IconColor = Blue,
-			IconShape = nil,
-			Border = true,
+do
+	local ConfigElementsTab = ConfigUsageSection:Tab({
+		Title = "Config Elements",
+		Icon = "solar:file-text-bold",
+		IconColor = Blue,
+		IconShape = nil,
+		Border = true,
+	})
+
+	-- Config flags must be unique. Controls remain visible in Studio even when
+	-- the current runtime does not expose filesystem persistence functions.
+	ConfigElementsTab:Colorpicker({
+		Flag = "AccentColor",
+		Title = "Accent color",
+		Desc = "Stored as a hex color when config persistence is available.",
+		Default = Color3.fromRGB(155, 163, 175),
+		Transparency = 0,
+		Callback = function(color)
+			print("Accent color:", color)
+		end,
+	})
+
+	ConfigElementsTab:Dropdown({
+		Flag = "DisplayMode",
+		Title = "Display mode",
+		Values = { "Compact", "Comfortable", "Spacious" },
+		Value = "Comfortable",
+		Callback = function(value)
+			print("Display mode:", value)
+		end,
+	})
+
+	ConfigElementsTab:Input({
+		Flag = "ProfileLabel",
+		Title = "Profile label",
+		Value = "Default profile",
+		Placeholder = "Enter a label...",
+		Callback = function(value)
+			print("Profile label:", value)
+		end,
+	})
+
+	ConfigElementsTab:Keybind({
+		Flag = "WindowToggleKey",
+		Title = "Window toggle key",
+		Value = "RightShift",
+		Callback = function(value)
+			local keyCode = Enum.KeyCode[tostring(value)]
+			if keyCode then
+				Window:SetToggleKey(keyCode)
+			end
+		end,
+	})
+
+	ConfigElementsTab:Slider({
+		Flag = "InterfaceScale",
+		Title = "Interface scale",
+		Step = 0.05,
+		Value = { Min = 0.7, Max = 1.2, Default = 1 },
+		Callback = function(value)
+			Window:SetUIScale(value)
+		end,
+	})
+
+	ConfigElementsTab:Toggle({
+		Flag = "PanelBackgroundVisible",
+		Title = "Panel background",
+		Value = not Window.HidePanelBackground,
+		Callback = function(enabled)
+			Window:SetPanelBackground(enabled)
+		end,
+	})
+
+	ConfigElementsTab:Toggle({
+		Flag = "ExampleToggle",
+		Title = "Example preference",
+		Desc = "A second independently persisted toggle.",
+		Value = false,
+		Callback = function(enabled)
+			print("Example preference:", enabled)
+		end,
+	})
+
+	local ConfigTab = ConfigUsageSection:Tab({
+		Title = "Config Manager",
+		Icon = "solar:folder-with-files-bold",
+		IconColor = Purple,
+		Border = true,
+	})
+
+	local ConfigManager = Window.ConfigManager
+	local HasConfigStorage = type(ConfigManager) == "table"
+	local ConfigName = "default"
+	local ConfigNameInput = ConfigTab:Input({
+		Title = "Config name",
+		Icon = "file-cog",
+		Value = ConfigName,
+		Placeholder = "Enter a config name...",
+		Callback = function(value)
+			local cleanName = tostring(value or ""):gsub("[^%w _%-]", ""):sub(1, 48)
+			if cleanName ~= "" then
+				ConfigName = cleanName
+			end
+		end,
+	})
+
+	if not HasConfigStorage then
+		ConfigTab:Paragraph({
+			Title = "Filesystem storage unavailable",
+			Desc = "The config controls are displayed for reference, but this runtime does not expose the file APIs required to save or load local JSON files. Run in a compatible client environment or use a normal in-game DataStore workflow on the server.",
 		})
+	else
+		local function getConfigs()
+			local ok, configs = pcall(function()
+				return ConfigManager:AllConfigs()
+			end)
+			return ok and type(configs) == "table" and configs or {}
+		end
 
-		-- All elements are taken from the official documentation: https://hamzyy4.github.io/ForktUI-Docs/docs
-
-		-- Saving elements to the config using `Flag`
-
-		ConfigElementsTab:Colorpicker({
-			Flag = "ColorpickerTest",
-			Title = "Colorpicker",
-			Desc = "Colorpicker Description",
-			Default = Color3.fromRGB(0, 255, 0),
-			Transparency = 0,
-			Locked = false,
-			Callback = function(color)
-				print("Background color: " .. tostring(color))
-			end,
-		})
-
-		ConfigElementsTab:Space()
-
-		ConfigElementsTab:Dropdown({
-			Flag = "DropdownTest",
-			Title = "Advanced Dropdown",
-			Values = {
-				{
-					Title = "Category A",
-					Icon = "bird",
-				},
-				{
-					Title = "Category B",
-					Icon = "house",
-				},
-				{
-					Title = "Category C",
-					Icon = "droplet",
-				},
-			},
-			Value = "Category A",
-			Callback = function(option)
-				print("Category selected: " .. option.Title .. " with icon " .. option.Icon)
-			end,
-		})
-		ConfigElementsTab:Dropdown({
-			Flag = "DropdownTest2",
-			Title = "Advanced Dropdown 2",
-			Values = {
-				{
-					Title = "Category A",
-					Icon = "bird",
-				},
-				{
-					Title = "Category B",
-					Icon = "house",
-				},
-				{
-					Title = "Category C",
-					Icon = "droplet",
-					Locked = true,
-				},
-			},
-			Value = "Category A",
-			Multi = true,
-			Callback = function(options)
-				local titles = {}
-				for _, v in ipairs(options) do
-					table.insert(titles, v.Title)
-				end
-				print("Selected: " .. table.concat(titles, ", "))
-			end,
-		})
-
-		ConfigElementsTab:Space()
-
-		ConfigElementsTab:Input({
-			Flag = "InputTest",
-			Title = "Input",
-			Desc = "Input Description",
-			Value = "Default value",
-			InputIcon = "bird",
-			Type = "Input", -- or "Textarea"
-			Placeholder = "Enter text...",
-			Callback = function(input)
-				print("Text entered: " .. input)
-			end,
-		})
-
-		ConfigElementsTab:Space()
-
-		ConfigElementsTab:Keybind({
-			Flag = "KeybindTest",
-			Title = "Keybind",
-			Desc = "Keybind to open ui",
-			Value = "G",
-			Callback = function(v)
-				Window:SetToggleKey(Enum.KeyCode[v])
-			end,
-		})
-
-		ConfigElementsTab:Space()
-
-		ConfigElementsTab:Slider({
-			Flag = "SliderTest",
-			Title = "Slider",
-			Step = 1,
-			Value = {
-				Min = 20,
-				Max = 120,
-				Default = 70,
-			},
+		local ConfigDropdown = ConfigTab:Dropdown({
+			Title = "Saved configurations",
+			Desc = "Select an existing local configuration.",
+			Values = getConfigs(),
+			AllowNone = true,
 			Callback = function(value)
-				print(value)
-			end,
-		})
-		ConfigElementsTab:Slider({
-			Flag = "SliderTest2",
-			--Title = "Slider",
-			Icons = {
-				From = "sfsymbols:sunMinFill",
-				To = "sfsymbols:sunMaxFill",
-			},
-			Step = 1,
-			IsTooltip = true,
-			Value = {
-				Min = 0,
-				Max = 100,
-				Default = 50,
-			},
-			Callback = function(value)
-				print(value)
-			end,
-		})
-
-		ConfigElementsTab:Space()
-
-		ConfigElementsTab:Toggle({
-			Flag = "ToggleTest",
-			Title = "Toggle Panel Background",
-			--Desc = "Toggle Description",
-			--Icon = "house",
-			--Type = "Checkbox",
-			Value = not Window.HidePanelBackground,
-			Callback = function(state)
-				Window:SetPanelBackground(state)
-			end,
-		})
-
-		ConfigElementsTab:Toggle({
-			Flag = "ToggleTest",
-			Title = "Toggle",
-			Desc = "Toggle Description",
-			--Icon = "house",
-			--Type = "Checkbox",
-			Value = false,
-			Callback = function(state)
-				print("Toggle Activated" .. tostring(state))
-			end,
-		})
-	end
-
-	do -- config panel
-		local ConfigTab = ConfigUsageSection:Tab({
-			Title = "Config Usage",
-			Icon = "solar:folder-with-files-bold",
-			IconColor = Purple,
-			IconShape = nil,
-			Border = true,
-		})
-
-		local ConfigManager = Window.ConfigManager
-		local ConfigName = "default"
-
-		local ConfigNameInput = ConfigTab:Input({
-			Title = "Config Name",
-			Icon = "file-cog",
-			Callback = function(value)
-				ConfigName = value
-			end,
-		})
-
-		ConfigTab:Space()
-
-		-- local AutoLoadToggle = ConfigTab:Toggle({
-		--     Title = "Enable Auto Load to Selected Config",
-		--     Value = false,
-		--     Callback = function(v)
-		--         Window.CurrentConfig:SetAutoLoad(v)
-		--     end
-		-- })
-
-		-- ConfigTab:Space()
-
-		local AllConfigs = ConfigManager:AllConfigs()
-		local DefaultValue = table.find(AllConfigs, ConfigName) and ConfigName or nil
-
-		local AllConfigsDropdown = ConfigTab:Dropdown({
-			Title = "All Configs",
-			Desc = "Select existing configs",
-			Values = AllConfigs,
-			Value = DefaultValue,
-			Callback = function(value)
-				ConfigName = value
-				ConfigNameInput:Set(value)
-
-				--AutoLoadToggle:Set(ConfigManager:GetConfig(ConfigName).AutoLoad or false)
-			end,
-		})
-
-		ConfigTab:Space()
-
-		ConfigTab:Button({
-			Title = "Save Config",
-			Icon = "",
-			Justify = "Center",
-			Callback = function()
-				Window.CurrentConfig = ConfigManager:Config(ConfigName)
-				if Window.CurrentConfig:Save() then
-					ForktUI:Notify({
-						Title = "Config Saved",
-						Desc = "Config '" .. ConfigName .. "' saved",
-						Icon = "check",
-					})
-				end
-
-				AllConfigsDropdown:Refresh(ConfigManager:AllConfigs())
-			end,
-		})
-
-		ConfigTab:Space()
-
-		ConfigTab:Button({
-			Title = "Load Config",
-			Icon = "",
-			Justify = "Center",
-			Callback = function()
-				Window.CurrentConfig = ConfigManager:CreateConfig(ConfigName)
-				if Window.CurrentConfig:Load() then
-					ForktUI:Notify({
-						Title = "Config Loaded",
-						Desc = "Config '" .. ConfigName .. "' loaded",
-						Icon = "refresh-cw",
-					})
+				if type(value) == "string" and value ~= "" then
+					ConfigName = value
+					ConfigNameInput:Set(value)
 				end
 			end,
 		})
 
-		ConfigTab:Space()
+		local function refreshConfigs()
+			ConfigDropdown:Refresh(getConfigs())
+		end
 
 		ConfigTab:Button({
-			Title = "Print AutoLoad Configs",
-			Icon = "",
-			Justify = "Center",
+			Title = "Save configuration",
+			Icon = "save",
 			Callback = function()
-				print(HttpService:JSONDecode(ConfigManager:GetAutoLoadConfigs()))
+				local config = ConfigManager:Config(ConfigName)
+				if type(config) ~= "table" then
+					ForktUI:Notify({ Title = "Save failed", Content = "Could not create the selected configuration." })
+					return
+				end
+
+				local saved, result = config:Save()
+				ForktUI:Notify({
+					Title = saved and "Configuration saved" or "Save failed",
+					Content = saved and ("Saved '" .. ConfigName .. "'.") or tostring(result),
+					Duration = 4,
+				})
+				refreshConfigs()
+			end,
+		})
+
+		ConfigTab:Button({
+			Title = "Load configuration",
+			Icon = "folder-open",
+			Variant = "Secondary",
+			Callback = function()
+				local config = ConfigManager:Config(ConfigName)
+				if type(config) ~= "table" then
+					ForktUI:Notify({ Title = "Load failed", Content = "Could not create the selected configuration." })
+					return
+				end
+
+				local loaded, result = config:Load()
+				ForktUI:Notify({
+					Title = loaded and "Configuration loaded" or "Load failed",
+					Content = loaded and ("Loaded '" .. ConfigName .. "'.") or tostring(result),
+					Duration = 4,
+				})
+			end,
+		})
+
+		ConfigTab:Button({
+			Title = "Delete configuration",
+			Icon = "trash-2",
+			Variant = "Tertiary",
+			Callback = function()
+				local deleted, result = ConfigManager:DeleteConfig(ConfigName)
+				ForktUI:Notify({
+					Title = deleted and "Configuration deleted" or "Delete failed",
+					Content = deleted and ("Deleted '" .. ConfigName .. "'.") or tostring(result),
+					Duration = 4,
+				})
+				refreshConfigs()
+			end,
+		})
+
+		ConfigTab:Button({
+			Title = "View auto-load configurations",
+			Icon = "list-checks",
+			Variant = "Tertiary",
+			Callback = function()
+				local encoded = HttpService:JSONEncode(ConfigManager:GetAutoLoadConfigs())
+				ForktUI:Notify({ Title = "Auto-load configurations", Content = encoded, Duration = 6 })
 			end,
 		})
 	end
 end
 
--- */  Other  /* --
+-- */  Community  /* --
 do
-	local InviteCode = "ftgs-development-hub-1300692552005189632"
-	local DiscordAPI = "https://discord.com/api/v10/invites/" .. InviteCode .. "?with_counts=true&with_expiration=true"
-
-	local Response = ForktUI.cloneref(game:GetService("HttpService"))
-		:JSONDecode(ForktUI.Creator.Request and ForktUI.Creator.Request({
-			Url = DiscordAPI,
-			Method = "GET",
-			Headers = {
-				["User-Agent"] = "ForktUI/Example",
-				["Accept"] = "application/json",
-			},
-		}).Body or "{}")
-
-	local DiscordTab = OtherSection:Tab({
-		Title = "Discord",
+	local CommunityTab = OtherSection:Tab({
+		Title = "Community",
+		Icon = "users-round",
 		Border = true,
 	})
 
-	if Response and Response.guild then
-		DiscordTab:Section({
-			Title = "Join our Discord server!",
-			TextSize = 20,
-		})
-		local DiscordServerParagraph = DiscordTab:Paragraph({
-			Title = tostring(Response.guild.name),
-			Desc = tostring(Response.guild.description),
-			Image = "https://cdn.discordapp.com/icons/"
-				.. Response.guild.id
-				.. "/"
-				.. Response.guild.icon
-				.. ".png?size=1024",
-			Thumbnail = "https://cdn.discordapp.com/banners/1300692552005189632/35981388401406a4b7dffd6f447a64c4.png?size=512",
-			ImageSize = 48,
-			Buttons = {
-				{
-					Title = "Copy link",
-					Icon = "link",
-					Callback = function()
-						setclipboard("https://discord.gg/" .. InviteCode)
-					end,
-				},
-			},
-		})
-	elseif RunService:IsStudio() or not writefile then
-		DiscordTab:Paragraph({
-			Title = "Discord API is not available in Studio mode.",
-			TextSize = 20,
-			Justify = "Center",
-			Image = "solar:info-circle-bold",
-			Color = "Red",
-			Buttons = {
-				{
-					Title = "Get/Copy Invite Link",
-					Icon = "link",
-					Callback = function()
-						if setclipboard then
-							setclipboard("https://discord.gg/" .. InviteCode)
-						else
-							ForktUI:Notify({
-								Title = "Discord Invite Link",
-								Content = "https://discord.gg/" .. InviteCode,
-							})
-						end
-					end,
-				},
-			},
-		})
-	else
-		DiscordTab:Paragraph({
-			Title = "Failed to fetch Discord server info.",
-			TextSize = 20,
-			Justify = "Center",
-			Image = "solar:info-circle-bold",
-			Color = "Red",
-		})
+	CommunityTab:Paragraph({
+		Title = "ForktUI resources",
+		Desc = "Find the source code, implementation examples, and API documentation using the links below. A replacement community invite has not been configured in this example yet, so no legacy invite is displayed.",
+	})
+
+	local function copyOrShow(label, value)
+		local clipboard = setclipboard or toclipboard
+		if type(clipboard) == "function" then
+			local ok = pcall(clipboard, value)
+			if ok then
+				ForktUI:Notify({ Title = "Copied", Content = label .. " copied to clipboard." })
+				return
+			end
+		end
+		ForktUI:Notify({ Title = label, Content = value, Duration = 7 })
 	end
+
+	CommunityTab:Button({
+		Title = "Copy GitHub repository",
+		Icon = "github",
+		Callback = function()
+			copyOrShow("Repository URL", "https://github.com/HamZyy4/ForktUI")
+		end,
+	})
+
+	CommunityTab:Button({
+		Title = "Copy documentation URL",
+		Icon = "book-open",
+		Variant = "Secondary",
+		Callback = function()
+			copyOrShow("Documentation URL", "https://hamzyy4.github.io/ForktUI-Docs/")
+		end,
+	})
 end
 
 local Tabs = {

@@ -106,7 +106,7 @@ jobs:
                         \"author\": {
                           \"name\": \"${{ github.repository }}\",
                           \"url\": \"https://github.com/${{ github.repository }}\",
-                          \"icon_url\": \"https://raw.githubusercontent.com/HamZyy4/ForktUI/main/docs/logo-forktui.png\"
+                          \"icon_url\": \"https://www.image2url.com/r2/default/images/1795519428668-08e17509-eb29-45cf-b1a2-7ddb06372b47.png\"
                         }
                       }]
                     }"

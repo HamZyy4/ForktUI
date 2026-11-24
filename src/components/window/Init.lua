@@ -346,25 +346,63 @@ return function(Config)
 
 	local UserIcon
 	if Window.User then
-		local function GetUserThumb()
-			local ImageId, _ = Players:GetUserThumbnailAsync(
-				Window.User.Anonymous and 1 or Players.LocalPlayer.UserId,
-				Enum.ThumbnailType.HeadShot,
-				Enum.ThumbnailSize.Size420x420
-			)
-			return ImageId
+		local cachedUserThumbnail = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+
+		local function GetUserThumb(userId)
+			local targetId = tonumber(userId) or (Players.LocalPlayer and Players.LocalPlayer.UserId) or 1
+			local ok, imageId = pcall(function()
+				local thumbnail, _isReady = Players:GetUserThumbnailAsync(
+					targetId,
+					Enum.ThumbnailType.HeadShot,
+					Enum.ThumbnailSize.Size420x420
+				)
+				return thumbnail
+			end)
+			return ok and imageId or "rbxasset://textures/ui/GuiImagePlaceholder.png"
+		end
+
+		local function RefreshUserThumbnail()
+			if not UserIcon then
+				return
+			end
+			local player = Players.LocalPlayer
+			local userId = player and player.UserId
+			if Window.User.Anonymous or not userId then
+				cachedUserThumbnail = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+				local avatarFrame = UserIcon:FindFirstChild("UserIcon")
+				local avatar = avatarFrame and avatarFrame:FindFirstChild("ImageLabel")
+				if avatar then
+					avatar.Image = cachedUserThumbnail
+				end
+				return
+			end
+			task.spawn(function()
+				local imageId = GetUserThumb(userId)
+				cachedUserThumbnail = imageId
+				if UserIcon and UserIcon.Parent then
+					local avatarFrame = UserIcon:FindFirstChild("UserIcon")
+					local avatar = avatarFrame and avatarFrame:FindFirstChild("ImageLabel")
+					if avatar then
+						avatar.Image = imageId
+					end
+				end
+			end)
 		end
 
 		UserIcon = New("TextButton", {
 			Size = UDim2.new(
 				0,
-				Window.UIElements.SideBarContainer.AbsoluteSize.X - (Window.UIPadding / 2),
+				math.max(Window.SideBarWidth - Window.UIPadding, 0),
 				0,
 				42 + Window.UIPadding
 			),
 			Position = UDim2.new(0, Window.UIPadding / 2, 1, -(Window.UIPadding / 2)),
 			AnchorPoint = Vector2.new(0, 1),
 			BackgroundTransparency = 1,
+			AutoButtonColor = false,
+			Selectable = true,
+			Text = "",
+			Name = "UserProfileButton",
 			Visible = Window.User.Enabled or false,
 		}, {
 			Creator.NewRoundFrame(Window.UICorner - (Window.UIPadding / 2), "SquircleOutline", {
@@ -398,7 +436,7 @@ return function(Config)
 				Name = "UserIcon",
 			}, {
 				New("ImageLabel", {
-					Image = GetUserThumb(),
+					Image = "rbxasset://textures/ui/GuiImagePlaceholder.png",
 					BackgroundTransparency = 1,
 					Size = UDim2.new(0, 42, 0, 42),
 					ThemeTag = {
@@ -411,7 +449,8 @@ return function(Config)
 					}),
 				}),
 				New("Frame", {
-					AutomaticSize = "XY",
+					AutomaticSize = Enum.AutomaticSize.Y,
+					Size = UDim2.new(1, -58, 0, 0),
 					BackgroundTransparency = 1,
 				}, {
 					New("TextLabel", {
@@ -423,7 +462,7 @@ return function(Config)
 						FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
 						AutomaticSize = "Y",
 						BackgroundTransparency = 1,
-						Size = UDim2.new(1, -(42 / 2) - 6, 0, 0),
+						Size = UDim2.new(1, 0, 0, 0),
 						TextTruncate = "AtEnd",
 						TextXAlignment = "Left",
 						Name = "DisplayName",
@@ -438,7 +477,7 @@ return function(Config)
 						FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 						AutomaticSize = "Y",
 						BackgroundTransparency = 1,
-						Size = UDim2.new(1, -(42 / 2) - 6, 0, 0),
+						Size = UDim2.new(1, 0, 0, 0),
 						TextTruncate = "AtEnd",
 						TextXAlignment = "Left",
 						Name = "UserName",
@@ -483,13 +522,18 @@ return function(Config)
 			UserIcon.Visible = false
 		end
 		function Window.User:SetAnonymous(v)
-			if v ~= false then
-				v = true
+			if type(v) ~= "boolean" then
+				return false, "SetAnonymous expects a boolean"
 			end
 			Window.User.Anonymous = v
-			UserIcon.UserIcon.ImageLabel.Image = GetUserThumb()
-			UserIcon.UserIcon.Frame.DisplayName.Text = v and "Anonymous" or Players.LocalPlayer.DisplayName
-			UserIcon.UserIcon.Frame.UserName.Text = v and "anonymous" or Players.LocalPlayer.Name
+			local player = Players.LocalPlayer
+			if UserIcon and UserIcon.Parent then
+				local frame = UserIcon.UserIcon.Frame
+				frame.DisplayName.Text = v and "Anonymous" or (player and player.DisplayName or "Player")
+				frame.UserName.Text = v and "anonymous" or (player and player.Name or "player")
+				RefreshUserThumbnail()
+			end
+			return Window.User
 		end
 
 		if Window.User.Enabled then
@@ -498,19 +542,99 @@ return function(Config)
 			Window.User:Disable()
 		end
 
-		if Window.User.Callback then
-			Creator.AddSignal(UserIcon.MouseButton1Click, function()
-				Window.User.Callback()
-			end)
-			Creator.AddSignal(UserIcon.MouseEnter, function()
-				Tween(UserIcon.UserIcon, 0.04, { ImageTransparency = 0.95 }):Play()
-				Tween(UserIcon.Outline, 0.04, { ImageTransparency = 0.85 }):Play()
-			end)
-			Creator.AddSignal(UserIcon.InputEnded, function()
-				Tween(UserIcon.UserIcon, 0.04, { ImageTransparency = 1 }):Play()
-				Tween(UserIcon.Outline, 0.04, { ImageTransparency = 1 }):Play()
-			end)
+		local function escapeRichText(value)
+			return tostring(value or "")
+				:gsub("&", "&amp;")
+				:gsub("<", "&lt;")
+				:gsub(">", "&gt;")
 		end
+
+		local function ShowUserProfile()
+			local player = Players.LocalPlayer
+			if not player then
+				return
+			end
+
+			if Window.User.Anonymous then
+				Config.ForktUI:Popup({
+					Title = "Anonymous profile",
+					Content = "Anonymous mode is enabled. Turn it off in Window.User:SetAnonymous(false) to display the local Roblox account profile.",
+					Icon = "user-round",
+					Buttons = {
+						{ Title = "Close", Variant = "Tertiary" },
+					},
+				})
+				return
+			end
+
+			local profileUrl = "https://www.roblox.com/users/" .. tostring(player.UserId) .. "/profile"
+			local memberType = "Standard"
+			pcall(function()
+				memberType = player.MembershipType.Name
+			end)
+
+			local profileDetails = table.concat({
+				"@" .. escapeRichText(player.Name),
+				"User ID: " .. tostring(player.UserId),
+				"Account age: " .. tostring(player.AccountAge) .. " days",
+				"Membership: " .. escapeRichText(memberType),
+				"Profile: " .. escapeRichText(profileUrl),
+			}, "\n")
+
+			Config.ForktUI:Popup({
+				Title = escapeRichText(player.DisplayName),
+				Content = profileDetails,
+				Icon = "user-round",
+				Thumbnail = {
+					Image = cachedUserThumbnail,
+				},
+				Buttons = {
+					{
+						Title = "Copy profile link",
+						Icon = "copy",
+						Callback = function()
+							local clipboard = setclipboard or toclipboard
+						if type(clipboard) == "function" then
+							local copied = pcall(clipboard, profileUrl)
+							if copied then
+								Config.ForktUI:Notify({ Title = "Profile link copied", Content = "Roblox profile URL copied to clipboard." })
+								return
+							end
+						end
+						Config.ForktUI:Notify({ Title = "Roblox profile URL", Content = profileUrl, Duration = 7 })
+						end,
+					},
+					{ Title = "Close", Variant = "Tertiary" },
+				},
+			})
+		end
+
+		-- Defer the thumbnail update until the button has been parented into the window tree.
+		task.defer(RefreshUserThumbnail)
+		Creator.AddSignal(UserIcon.Activated, function()
+			ShowUserProfile()
+			if type(Window.User.Callback) == "function" then
+				local selectedPlayer = Players.LocalPlayer
+				if Window.User.Anonymous then
+					selectedPlayer = nil
+				end
+				Creator.SafeCallback(Window.User.Callback, selectedPlayer)
+			end
+		end)
+		Creator.AddSignal(UserIcon.MouseEnter, function()
+			Tween(UserIcon.UserIcon, 0.08, { ImageTransparency = 0.94 }):Play()
+			Tween(UserIcon.Outline, 0.08, { ImageTransparency = 0.82 }):Play()
+		end)
+		Creator.AddSignal(UserIcon.MouseLeave, function()
+			Tween(UserIcon.UserIcon, 0.08, { ImageTransparency = 1 }):Play()
+			Tween(UserIcon.Outline, 0.08, { ImageTransparency = 1 }):Play()
+		end)
+		Creator.AddSignal(UserIcon.InputEnded, function(input)
+			if input.UserInputType == Enum.UserInputType.Touch then
+				Tween(UserIcon.UserIcon, 0.08, { ImageTransparency = 1 }):Play()
+				Tween(UserIcon.Outline, 0.08, { ImageTransparency = 1 }):Play()
+			end
+		end)
 	end
 
 	local Outline1
@@ -1621,33 +1745,53 @@ return function(Config)
 		Window.CurrentConfig = ConfigModule
 	end
 
-	do
-		local Margin = 40
-		local ViewportSize = CurrentCamera.ViewportSize
-		local WindowSize = Vector2.new(Window.Size.X.Offset, Window.Size.Y.Offset)
+	local function ApplyAutoScale()
+		if not Window.AutoScale then
+			return
+		end
 
-		if not Window.IsFullscreen and Window.AutoScale then
-			local AvailableWidth = ViewportSize.X - (Margin * 2)
-			local AvailableHeight = ViewportSize.Y - (Margin * 2)
+		local camera = workspace.CurrentCamera or CurrentCamera
+		if not camera then
+			return
+		end
+		CurrentCamera = camera
 
-			local ScaleX = AvailableWidth / WindowSize.X
-			local ScaleY = AvailableHeight / WindowSize.Y
+		local viewport = camera.ViewportSize
+		if viewport.X <= 0 or viewport.Y <= 0 then
+			return
+		end
 
-			local RequiredScale = math.min(ScaleX, ScaleY)
+		local margin = math.clamp(math.min(viewport.X, viewport.Y) * 0.035, 12, 32)
+		local baseWidth = math.max(Window.Size.X.Offset, 1)
+		local baseHeight = math.max(Window.Size.Y.Offset, 1)
+		local availableWidth = math.max(viewport.X - margin * 2, 1)
+		local availableHeight = math.max(viewport.Y - margin * 2, 1)
+		local requiredScale = math.min(availableWidth / baseWidth, availableHeight / baseHeight)
+		local finalScale = math.clamp(requiredScale, 0.3, 1)
+		local currentScale = Window:GetUIScale() or 1
 
-			local MinScale = 0.3
-			local MaxScale = 1.0
-
-			local FinalScale = math.clamp(RequiredScale, MinScale, MaxScale)
-
-			local CurrentScale = Window:GetUIScale() or 1
-			local Tolerance = 0.05
-
-			if math.abs(FinalScale - CurrentScale) > Tolerance then
-				Window:SetUIScale(FinalScale)
-			end
+		if math.abs(finalScale - currentScale) > 0.025 then
+			Window:SetUIScale(finalScale)
 		end
 	end
+
+	local cameraViewportConnection
+	local function BindCamera(camera)
+		if cameraViewportConnection then
+			cameraViewportConnection:Disconnect()
+			cameraViewportConnection = nil
+		end
+		CurrentCamera = camera
+		if camera then
+			cameraViewportConnection = Creator.AddSignal(camera:GetPropertyChangedSignal("ViewportSize"), ApplyAutoScale)
+		end
+		ApplyAutoScale()
+	end
+
+	Creator.AddSignal(workspace:GetPropertyChangedSignal("CurrentCamera"), function()
+		BindCamera(workspace.CurrentCamera)
+	end)
+	BindCamera(workspace.CurrentCamera or CurrentCamera)
 
 	if Window.OpenButtonMain and Window.OpenButtonMain.Button then
 		Creator.AddSignal(Window.OpenButtonMain.Button.TextButton.MouseButton1Click, function()
